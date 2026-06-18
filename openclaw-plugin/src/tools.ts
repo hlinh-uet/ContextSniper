@@ -25,7 +25,7 @@ function canonicalCodeQuery(query: string): string {
 
 function workspaceRoot(config: ResolvedConfig, requested?: string): string {
   const raw = (requested || "").trim();
-  if (!raw || ["$WORK_DIR", "${WORK_DIR}", "$PWD", "${PWD}", "$RTC_WORKSPACE_ROOT", "${RTC_WORKSPACE_ROOT}"].includes(raw)) {
+  if (!raw || ["$WORK_DIR", "${WORK_DIR}", "$PWD", "${PWD}", "$CONTEXTSNIPER_WORKSPACE_ROOT", "${CONTEXTSNIPER_WORKSPACE_ROOT}"].includes(raw)) {
     return config.workspaceRoot;
   }
   return path.resolve(raw);
@@ -42,7 +42,7 @@ function toolResult(value: unknown): unknown {
   };
 }
 
-const recentRtcHitFiles = new Set<string>();
+const recentContextSniperHitFiles = new Set<string>();
 
 function normalizeHitPath(root: string, item: Record<string, unknown>): string | null {
   const values = [item.uri, item.file_path, item.path, item.relative_path];
@@ -59,14 +59,14 @@ function normalizeHitPath(root: string, item: Record<string, unknown>): string |
   return null;
 }
 
-function rememberRtcHitFiles(root: string, value: unknown): void {
+function rememberContextSniperHitFiles(root: string, value: unknown): void {
   const data = asRecord(value);
   const hits = Array.isArray(data?.hits) ? data.hits : [];
   for (const hit of hits) {
     const item = asRecord(hit);
     if (!item) continue;
     const fullPath = normalizeHitPath(root, item);
-    if (fullPath) recentRtcHitFiles.add(fullPath);
+    if (fullPath) recentContextSniperHitFiles.add(fullPath);
   }
 }
 
@@ -100,7 +100,7 @@ function slimSearchResponse(response: unknown, localSnippets: unknown[] = [], li
   if (data.ok === false || data.error) {
     return {
       ok: data.ok ?? false,
-      error: data.error || "rtc_search_code failed",
+      error: data.error || "contextsniper_search_code failed",
     };
   }
 
@@ -125,13 +125,13 @@ function slimSearchResponse(response: unknown, localSnippets: unknown[] = [], li
 }
 
 function hitsDefaultLimit(): number {
-  const parsed = Number(process.env.RTC_SEARCH_LIMIT || 5);
+  const parsed = Number(process.env.CONTEXTSNIPER_SEARCH_LIMIT || 5);
   return Number.isFinite(parsed) ? parsed : 5;
 }
 
 function searchDebugEnabled(): boolean {
-  return ["1", "true", "yes", "on"].includes((process.env.RTC_SEARCH_DEBUG || "").toLowerCase()) ||
-    ["1", "true", "yes", "on"].includes((process.env.RTC_SEARCH_INCLUDE_DEBUG || "").toLowerCase());
+  return ["1", "true", "yes", "on"].includes((process.env.CONTEXTSNIPER_SEARCH_DEBUG || "").toLowerCase()) ||
+    ["1", "true", "yes", "on"].includes((process.env.CONTEXTSNIPER_SEARCH_INCLUDE_DEBUG || "").toLowerCase());
 }
 
 function formatSearchSnippets(result: unknown, query?: string): string {
@@ -316,21 +316,21 @@ async function localSnippetFallback(root: string, query: string, globPatterns?: 
   return hits;
 }
 
-async function executeRtcReadTool(config: ResolvedConfig, params: { path?: string; offset?: number; limit?: number }): Promise<unknown> {
+async function executeContextSniperReadTool(config: ResolvedConfig, params: { path?: string; offset?: number; limit?: number }): Promise<unknown> {
   const requested = String(params.path || "");
   if (!requested) {
     throw new Error("read requires path");
   }
   const target = resolveInside(config.workspaceRoot, requested);
 
-  if (config.readToolPolicy === "guard" && recentRtcHitFiles.has(target)) {
+  if (config.readToolPolicy === "guard" && recentContextSniperHitFiles.has(target)) {
     return toolResult({
       ok: false,
-      blocked_by: "retrieval-token-cutter-read-guard",
+      blocked_by: "contextsniper-read-guard",
       path: target,
       reason:
-        "rtc_search_code already returned this file with usable code snippets in this run. Use those content_excerpt lines as context and call rtc_edit_file directly. If the snippet is insufficient, run one more focused rtc_search_code query for the exact symbol/heading/nearby phrase before doing a narrow read.",
-      next_step: "Use rtc_edit_file with old_string copied from rtc_search_code.content_excerpt, or retry rtc_search_code with a more focused query.",
+        "contextsniper_search_code already returned this file with usable code snippets in this run. Use those content_excerpt lines as context and call contextsniper_edit_file directly. If the snippet is insufficient, run one more focused contextsniper_search_code query for the exact symbol/heading/nearby phrase before doing a narrow read.",
+      next_step: "Use contextsniper_edit_file with old_string copied from contextsniper_search_code.content_excerpt, or retry contextsniper_search_code with a more focused query.",
     });
   }
 
@@ -342,31 +342,31 @@ async function executeRtcReadTool(config: ResolvedConfig, params: { path?: strin
   return toolResult(selected);
 }
 
-export function registerRtcTools(api: any, config: ResolvedConfig, ensureBackend?: () => Promise<void>): void {
+export function registerContextSniperTools(api: any, config: ResolvedConfig, ensureBackend?: () => Promise<void>): void {
   const register = (tool: Record<string, unknown>, names: string[]) => {
     api.registerTool(tool, { names, name: names[0] });
   };
 
   register(
     {
-      name: "rtc_health",
-      label: "RTC Health",
-      description: "Check whether the local Retrieval Token Cutter backend is healthy.",
+      name: "contextsniper_health",
+      label: "ContextSniper Health",
+      description: "Check whether the local ContextSniper backend is healthy.",
       parameters: { type: "object", additionalProperties: false, properties: {} },
       async execute() {
         await ensureBackend?.();
         return toolResult(await getJson(config, "/api/v1/health", 5000));
       },
     },
-    ["rtc_health"],
+    ["contextsniper_health"],
   );
 
   register(
     {
-      name: "rtc_index_codebase",
-      label: "RTC Index Codebase",
+      name: "contextsniper_index_codebase",
+      label: "ContextSniper Index Codebase",
       description:
-        "Warm code indexing for a workspace. Normal rtc_search_code calls also index candidates automatically.",
+        "Warm code indexing for a workspace. Normal contextsniper_search_code calls also index candidates automatically.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -381,22 +381,22 @@ export function registerRtcTools(api: any, config: ResolvedConfig, ensureBackend
         return toolResult({
           ok: true,
           skipped: true,
-          reason: "rtc_search_code performs candidate indexing automatically",
+          reason: "contextsniper_search_code performs candidate indexing automatically",
           workspace_root: workspaceRoot(config, params.path),
           force: Boolean(params.force),
-          next_step: "Call rtc_search_code with a focused query.",
+          next_step: "Call contextsniper_search_code with a focused query.",
         });
       },
     },
-    ["rtc_index_codebase"],
+    ["contextsniper_index_codebase"],
   );
 
   register(
     {
-      name: "rtc_search_code",
-      label: "RTC Search Code",
+      name: "contextsniper_search_code",
+      label: "ContextSniper Search Code",
       description:
-        "Search repository source, tests, docs, and release notes with Retrieval Token Cutter. content_excerpt values are exact editable file text, not summaries; copy them directly into edit replacement context when possible. Do not re-read files already returned with usable snippets; if search misses or lacks exact context after a focused retry, use a narrow read.",
+        "Search repository source, tests, docs, and release notes with ContextSniper. content_excerpt values are exact editable file text, not summaries; copy them directly into edit replacement context when possible. Do not re-read files already returned with usable snippets; if search misses or lacks exact context after a focused retry, use a narrow read.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -443,19 +443,19 @@ export function registerRtcTools(api: any, config: ResolvedConfig, ensureBackend
           throw error;
         }
         const slim = slimSearchResponse(response, localSnippets, body.limit);
-        rememberRtcHitFiles(body.workspaceRoot, slim);
+        rememberContextSniperHitFiles(body.workspaceRoot, slim);
         return toolResult(formatSearchSnippets(slim, body.query));
       },
     },
-    ["rtc_search_code"],
+    ["contextsniper_search_code"],
   );
 
   register(
     {
-      name: "rtc_edit_file",
-      label: "RTC Edit File",
+      name: "contextsniper_edit_file",
+      label: "ContextSniper Edit File",
       description:
-        "Edit a file through exact string replacement after rtc_search_code. old_string must match exact text in the target file, similar to OpenClaw edit oldText. Normally build old_string by copying exact lines from rtc_search_code content_excerpt/local_snippet_fallback and call this directly without re-reading the same file. If exact text is missing after a focused search retry, use a narrow read.",
+        "Edit a file through exact string replacement after contextsniper_search_code. old_string must match exact text in the target file, similar to OpenClaw edit oldText. Normally build old_string by copying exact lines from contextsniper_search_code content_excerpt/local_snippet_fallback and call this directly without re-reading the same file. If exact text is missing after a focused search retry, use a narrow read.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -508,8 +508,8 @@ export function registerRtcTools(api: any, config: ResolvedConfig, ensureBackend
               agentId: config.agentId,
               workspaceRoot: root,
               file_path: target,
-              wait_for_index: ["1", "true", "yes", "on"].includes((process.env.RTC_EDIT_REFRESH_WAIT || "0").toLowerCase()),
-              refresh_timeout_sec: Number(process.env.RTC_EDIT_REFRESH_TIMEOUT_SEC || "5"),
+              wait_for_index: ["1", "true", "yes", "on"].includes((process.env.CONTEXTSNIPER_EDIT_REFRESH_WAIT || "0").toLowerCase()),
+              refresh_timeout_sec: Number(process.env.CONTEXTSNIPER_EDIT_REFRESH_TIMEOUT_SEC || "5"),
             },
             8000,
           );
@@ -518,7 +518,7 @@ export function registerRtcTools(api: any, config: ResolvedConfig, ensureBackend
         }
 
         const relativePath = path.relative(root, target);
-        const editDebug = ["1", "true", "yes", "on"].includes((process.env.RTC_EDIT_DEBUG || "").toLowerCase());
+        const editDebug = ["1", "true", "yes", "on"].includes((process.env.CONTEXTSNIPER_EDIT_DEBUG || "").toLowerCase());
         if (editDebug) {
           return toolResult({
             ok: true,
@@ -541,6 +541,6 @@ export function registerRtcTools(api: any, config: ResolvedConfig, ensureBackend
         });
       },
     },
-    ["rtc_edit_file"],
+    ["contextsniper_edit_file"],
   );
 }

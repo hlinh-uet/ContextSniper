@@ -1,4 +1,4 @@
 #!/usr/bin/env python3
-from rtc_terminal import main
+from contextsniper_terminal import main
 
 raise SystemExit(main(["_hook", "after-turn"]))

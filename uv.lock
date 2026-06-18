@@ -306,7 +306,7 @@ wheels = [
 ]
 
 [[package]]
-name = "context-engine"
+name = "contextsniper"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -344,7 +344,7 @@ sentence-transformers = [
 requires-dist = [
     { name = "apscheduler", specifier = ">=3.10.0" },
     { name = "chromadb", marker = "extra == 'chroma'", specifier = ">=0.4.0" },
-    { name = "context-engine", extras = ["opengauss", "chroma", "sentence-transformers"], marker = "extra == 'all'" },
+    { name = "contextsniper", extras = ["opengauss", "chroma", "sentence-transformers"], marker = "extra == 'all'" },
     { name = "jinja2", specifier = ">=3.1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "openai", specifier = ">=1.0.0" },

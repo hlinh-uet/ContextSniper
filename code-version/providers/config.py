@@ -1,7 +1,7 @@
 """Provider configuration for ContextEngine.
 
 Centralized configuration for LLM and Embedder providers.
-Now delegates to ``RtcConfig`` for unified YAML + env loading.
+Now delegates to ``ContextSniperConfig`` for unified YAML + env loading.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from providers.vector_index.chroma_index import ChromaVectorIndex
 from core.interfaces import VectorIndex
 
 if TYPE_CHECKING:
-    from providers.unified_config import RtcConfig
+    from providers.unified_config import ContextSniperConfig
     from providers.unified_config import SecretCommandSpec
 
 
@@ -87,10 +87,10 @@ class ProviderConfig:
 
         Environment variables:
             CONTEXTENGINE_PROVIDER: Provider type (mock/openai/openai-cached)
-            RTC_API_KEY: OpenAI API key
-            RTC_BASE_URL: Custom base URL for OpenAI-compatible API (auto-appends /v1 if needed)
-            RTC_EMBEDDING_MODEL: Embedding model name
-            RTC_LLM_MODEL: LLM model name
+            CONTEXTSNIPER_API_KEY: OpenAI API key
+            CONTEXTSNIPER_BASE_URL: Custom base URL for OpenAI-compatible API (auto-appends /v1 if needed)
+            CONTEXTSNIPER_EMBEDDING_MODEL: Embedding model name
+            CONTEXTSNIPER_LLM_MODEL: LLM model name
             VECTOR_DB_TYPE: Vector database type (memory/opengauss)
             OPENGAUSS_CONNECTION_STRING: PostgreSQL connection string for opengauss
             OPENGAUSS_DIMENSION: Embedding dimension (default 1024)
@@ -101,8 +101,8 @@ class ProviderConfig:
         return get_config().to_provider_config()
 
     @classmethod
-    def from_rtc_config(cls, cfg: RtcConfig) -> ProviderConfig:
-        """Create a provider-focused projection from an RtcConfig instance."""
+    def from_contextsniper_config(cls, cfg: ContextSniperConfig) -> ProviderConfig:
+        """Create a provider-focused projection from an ContextSniperConfig instance."""
         return cls(
             provider=cfg.provider,  # type: ignore
             openai_api_key=cfg.openai_api_key,
@@ -264,11 +264,11 @@ class ProviderConfig:
 
         raise ValueError(f"Unknown provider type: {self.provider}")
 
-    # Helper: convert the provider-facing subset back into an RtcConfig.
+    # Helper: convert the provider-facing subset back into an ContextSniperConfig.
     # This is intentionally not a full-fidelity round trip for service/auth/runtime fields.
-    def to_rtc_config(self) -> RtcConfig:
-        from providers.unified_config import RtcConfig
-        return RtcConfig(
+    def to_contextsniper_config(self) -> ContextSniperConfig:
+        from providers.unified_config import ContextSniperConfig
+        return ContextSniperConfig(
             provider=self.provider,
             openai_api_key=self.openai_api_key,
             openai_api_key_command=self.openai_api_key_command,

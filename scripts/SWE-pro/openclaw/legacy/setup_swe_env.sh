@@ -2,13 +2,13 @@
 # Source this file to load safe defaults for the plain OpenClaw SWE Pro runner.
 #
 # IMPORTANT: When invoking OpenClaw manually after sourcing this file, cd to the
-# generated SWE workspace first. Starting OpenClaw from the RTC repo root makes
+# generated SWE workspace first. Starting OpenClaw from the ContextSniper repo root makes
 # native read/exec tools resolve paths against the wrong project.
 
 export OPENCLAW_MODEL="${OPENCLAW_MODEL:-deepseek/deepseek-v4-flash}"
 export SWE_PRO_INSTANCE_ID="${SWE_PRO_INSTANCE_ID:-instance_qutebrowser__qutebrowser-f91ace96223cac8161c16dd061907e138fe85111-v059c6fdc75567943479b23ebca7c07b5e9a7f34c}"
-export RTC_CACHE_HOME="${RTC_CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/retrieval-token-cutter}"
-export REPO_BASE="${REPO_BASE:-$RTC_CACHE_HOME/swe-pro/openclaw/plain/cache/repo}"
+export CONTEXTSNIPER_CACHE_HOME="${CONTEXTSNIPER_CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/contextsniper}"
+export REPO_BASE="${REPO_BASE:-$CONTEXTSNIPER_CACHE_HOME/swe-pro/openclaw/plain/cache/repo}"
 _SWE_OPENCLAW_LEGACY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SWE_OUTPUT_ROOT="${SWE_OUTPUT_ROOT:-$_SWE_OPENCLAW_LEGACY_DIR/output_logs}"
 export SWE_VALIDATION_FORCE_LOCAL="${SWE_VALIDATION_FORCE_LOCAL:-1}"

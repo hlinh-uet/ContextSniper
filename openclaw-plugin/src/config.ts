@@ -2,10 +2,10 @@ import os from "node:os";
 import fs from "node:fs";
 import path from "node:path";
 
-export interface RtcPluginConfig {
+export interface ContextSniperPluginConfig {
   repoRoot?: string;
   workspaceRoot?: string;
-  rtcUrl?: string;
+  contextsniperUrl?: string;
   runtimeDir?: string;
   autoStart?: boolean;
   autoStop?: boolean;
@@ -26,7 +26,7 @@ export interface ResolvedConfig {
   pluginRoot: string;
   repoRoot: string;
   workspaceRoot: string;
-  rtcUrl: string;
+  contextsniperUrl: string;
   runtimeDir: string;
   autoStart: boolean;
   autoStop: boolean;
@@ -68,8 +68,8 @@ function truthyEnv(name: string): boolean {
 }
 
 function launchCwd(): string | undefined {
-  if (truthyEnv("RTC_OPENCLAW_IGNORE_LAUNCH_CWD")) return undefined;
-  const raw = process.env.RTC_OPENCLAW_LAUNCH_CWD || process.env.PWD;
+  if (truthyEnv("CONTEXTSNIPER_OPENCLAW_IGNORE_LAUNCH_CWD")) return undefined;
+  const raw = process.env.CONTEXTSNIPER_OPENCLAW_LAUNCH_CWD || process.env.PWD;
   if (!raw) return undefined;
   const candidate = resolvePathValue(raw);
   try {
@@ -94,46 +94,46 @@ function asReadToolPolicy(value: unknown): string {
   return "advisory";
 }
 
-export function resolveWorkspaceRoot(config: RtcPluginConfig): string {
-  const respectConfig = truthyEnv("RTC_OPENCLAW_RESPECT_CONFIG");
-  const respectEnvPaths = truthyEnv("RTC_OPENCLAW_RESPECT_ENV_PATHS") || respectConfig;
+export function resolveWorkspaceRoot(config: ContextSniperPluginConfig): string {
+  const respectConfig = truthyEnv("CONTEXTSNIPER_OPENCLAW_RESPECT_CONFIG");
+  const respectEnvPaths = truthyEnv("CONTEXTSNIPER_OPENCLAW_RESPECT_ENV_PATHS") || respectConfig;
   const raw =
-    (respectEnvPaths ? process.env.RTC_WORKSPACE_ROOT || process.env.OPENCLAW_WORKSPACE_ROOT : undefined) ||
-    (respectConfig && truthyEnv("RTC_OPENCLAW_RESPECT_CONFIG_WORKSPACE") ? config.workspaceRoot : undefined) ||
+    (respectEnvPaths ? process.env.CONTEXTSNIPER_WORKSPACE_ROOT || process.env.OPENCLAW_WORKSPACE_ROOT : undefined) ||
+    (respectConfig && truthyEnv("CONTEXTSNIPER_OPENCLAW_RESPECT_CONFIG_WORKSPACE") ? config.workspaceRoot : undefined) ||
     launchCwd() ||
     process.cwd();
   return resolvePathValue(raw);
 }
 
-export function resolveConfig(config: RtcPluginConfig, pluginRoot: string, repoRoot: string): ResolvedConfig {
-  const respectConfig = truthyEnv("RTC_OPENCLAW_RESPECT_CONFIG");
-  const respectEnvPaths = truthyEnv("RTC_OPENCLAW_RESPECT_ENV_PATHS") || respectConfig;
+export function resolveConfig(config: ContextSniperPluginConfig, pluginRoot: string, repoRoot: string): ResolvedConfig {
+  const respectConfig = truthyEnv("CONTEXTSNIPER_OPENCLAW_RESPECT_CONFIG");
+  const respectEnvPaths = truthyEnv("CONTEXTSNIPER_OPENCLAW_RESPECT_ENV_PATHS") || respectConfig;
   const effectiveConfig = respectConfig ? config : {};
-  const rtcUrl = (effectiveConfig.rtcUrl || process.env.RTC_URL || "http://127.0.0.1:8090").replace(/\/+$/, "");
+  const contextsniperUrl = (effectiveConfig.contextsniperUrl || process.env.CONTEXTSNIPER_URL || "http://127.0.0.1:8090").replace(/\/+$/, "");
   const runtimeDir = resolvePathValue(
     effectiveConfig.runtimeDir ||
-      (respectEnvPaths ? process.env.RTC_RUNTIME_DIR : undefined) ||
-      path.join(os.homedir(), ".cache", "retrieval-token-cutter-openclaw-plugin"),
+      (respectEnvPaths ? process.env.CONTEXTSNIPER_RUNTIME_DIR : undefined) ||
+      path.join(os.homedir(), ".cache", "contextsniper-openclaw-plugin"),
   );
 
   return {
     pluginRoot,
     repoRoot,
     workspaceRoot: resolveWorkspaceRoot(config),
-    rtcUrl,
+    contextsniperUrl,
     runtimeDir,
-    autoStart: asBoolean(effectiveConfig.autoStart ?? process.env.RTC_OPENCLAW_AUTO_START ?? process.env.RTC_PLUGIN_AUTO_START, true),
-    autoStop: asBoolean(effectiveConfig.autoStop ?? process.env.RTC_OPENCLAW_AUTO_STOP ?? process.env.RTC_PLUGIN_AUTO_STOP, true),
-    startWaitSeconds: asNumber(effectiveConfig.startWaitSeconds ?? process.env.RTC_PLUGIN_START_WAIT, 45, 1, 180),
+    autoStart: asBoolean(effectiveConfig.autoStart ?? process.env.CONTEXTSNIPER_OPENCLAW_AUTO_START ?? process.env.CONTEXTSNIPER_PLUGIN_AUTO_START, true),
+    autoStop: asBoolean(effectiveConfig.autoStop ?? process.env.CONTEXTSNIPER_OPENCLAW_AUTO_STOP ?? process.env.CONTEXTSNIPER_PLUGIN_AUTO_STOP, true),
+    startWaitSeconds: asNumber(effectiveConfig.startWaitSeconds ?? process.env.CONTEXTSNIPER_PLUGIN_START_WAIT, 45, 1, 180),
     injectCodePolicy: asBoolean(effectiveConfig.injectCodePolicy, true),
-    readToolPolicy: asReadToolPolicy(effectiveConfig.readToolPolicy ?? process.env.RTC_OPENCLAW_READ_TOOL_POLICY),
-    filterEnabled: asBoolean(effectiveConfig.filterEnabled ?? process.env.RTC_FILTER_ENABLED, true),
-    filterNativeRead: asBoolean(effectiveConfig.filterNativeRead ?? process.env.RTC_FILTER_NATIVE_READ, true),
-    filterNativeExec: asBoolean(effectiveConfig.filterNativeExec ?? process.env.RTC_FILTER_NATIVE_BASH, true),
-    searchLimit: asNumber(effectiveConfig.searchLimit ?? process.env.RTC_SEARCH_LIMIT, 4, 1, 100),
-    accountId: effectiveConfig.accountId || process.env.RTC_ACCOUNT_ID || "acct-demo",
-    userId: effectiveConfig.userId || process.env.RTC_USER_ID || "u-openclaw",
-    agentId: effectiveConfig.agentId || process.env.RTC_AGENT_ID || "openclaw",
-    sessionId: effectiveConfig.sessionId || process.env.RTC_SESSION_ID,
+    readToolPolicy: asReadToolPolicy(effectiveConfig.readToolPolicy ?? process.env.CONTEXTSNIPER_OPENCLAW_READ_TOOL_POLICY),
+    filterEnabled: asBoolean(effectiveConfig.filterEnabled ?? process.env.CONTEXTSNIPER_FILTER_ENABLED, true),
+    filterNativeRead: asBoolean(effectiveConfig.filterNativeRead ?? process.env.CONTEXTSNIPER_FILTER_NATIVE_READ, true),
+    filterNativeExec: asBoolean(effectiveConfig.filterNativeExec ?? process.env.CONTEXTSNIPER_FILTER_NATIVE_BASH, true),
+    searchLimit: asNumber(effectiveConfig.searchLimit ?? process.env.CONTEXTSNIPER_SEARCH_LIMIT, 4, 1, 100),
+    accountId: effectiveConfig.accountId || process.env.CONTEXTSNIPER_ACCOUNT_ID || "acct-demo",
+    userId: effectiveConfig.userId || process.env.CONTEXTSNIPER_USER_ID || "u-openclaw",
+    agentId: effectiveConfig.agentId || process.env.CONTEXTSNIPER_AGENT_ID || "openclaw",
+    sessionId: effectiveConfig.sessionId || process.env.CONTEXTSNIPER_SESSION_ID,
   };
 }

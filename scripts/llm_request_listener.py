@@ -188,7 +188,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--log",
-        default=os.environ.get("LLM_LISTENER_LOG", str(Path.home() / ".cache/rtc-llm-listener/llm_calls.jsonl")),
+        default=os.environ.get("LLM_LISTENER_LOG", str(Path.home() / ".cache/contextsniper-llm-listener/llm_calls.jsonl")),
         help="JSONL log path.",
     )
     parser.add_argument("--no-redact", action="store_true", help="Do not redact auth-like headers in logs.")

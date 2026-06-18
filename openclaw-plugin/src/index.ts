@@ -2,16 +2,16 @@ import { definePluginEntry } from "openclaw/plugin-sdk/core";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import type { RtcPluginConfig } from "./config.ts";
+import type { ContextSniperPluginConfig } from "./config.ts";
 import { resolveConfig } from "./config.ts";
 import { findRepoRoot, currentPluginRoot } from "./paths.ts";
 import { registerPolicyHook } from "./policy.ts";
-import { RtcService } from "./rtc-service.ts";
-import { registerRtcTools } from "./tools.ts";
+import { ContextSniperService } from "./contextsniper-service.ts";
+import { registerContextSniperTools } from "./tools.ts";
 import { registerFilterHooks } from "./filter.ts";
 
 function loadRepoEnvironment(repoRoot: string, logger: any): void {
-  const rawToggle = String(process.env.RTC_OPENCLAW_LOAD_ENV || "1").trim().toLowerCase();
+  const rawToggle = String(process.env.CONTEXTSNIPER_OPENCLAW_LOAD_ENV || "1").trim().toLowerCase();
   if (["0", "false", "no", "off"].includes(rawToggle)) return;
 
   const setupEnv = path.join(repoRoot, "setup_env.sh");
@@ -28,7 +28,7 @@ function loadRepoEnvironment(repoRoot: string, logger: any): void {
     maxBuffer: 4 * 1024 * 1024,
   });
   if (result.status !== 0 || !result.stdout) {
-    logger?.warn?.(`retrieval-token-cutter: could not load setup_env.sh for OpenClaw plugin`);
+    logger?.warn?.(`contextsniper: could not load setup_env.sh for OpenClaw plugin`);
     return;
   }
 
@@ -44,24 +44,24 @@ function loadRepoEnvironment(repoRoot: string, logger: any): void {
 }
 
 export default definePluginEntry({
-  id: "retrieval-token-cutter",
-  name: "Retrieval Token Cutter",
-  description: "Code search and exact-replacement edits backed by Retrieval Token Cutter.",
+  id: "contextsniper",
+  name: "ContextSniper",
+  description: "Code search and exact-replacement edits backed by ContextSniper.",
   register(api: any) {
     const pluginRoot = currentPluginRoot(import.meta.url);
-    const pluginConfig = (api.pluginConfig ?? {}) as RtcPluginConfig;
+    const pluginConfig = (api.pluginConfig ?? {}) as ContextSniperPluginConfig;
     const repoRoot = findRepoRoot(pluginRoot, pluginConfig.repoRoot);
     loadRepoEnvironment(repoRoot, api.logger ?? console);
     const config = resolveConfig(pluginConfig, pluginRoot, repoRoot);
-    const service = new RtcService(config, api.logger ?? console);
+    const service = new ContextSniperService(config, api.logger ?? console);
 
     if (config.autoStart) {
       void service.start().catch((error) => {
-        api.logger?.warn?.(`retrieval-token-cutter: backend auto-start failed: ${String(error)}`);
+        api.logger?.warn?.(`contextsniper: backend auto-start failed: ${String(error)}`);
       });
     }
 
-    registerRtcTools(api, config, async () => {
+    registerContextSniperTools(api, config, async () => {
       if (config.autoStart) await service.start();
     });
     registerPolicyHook(api, config, async () => {
@@ -77,7 +77,7 @@ export default definePluginEntry({
           return {
             block: true,
             blockReason:
-              "Native read is disabled by Retrieval Token Cutter for this run. Use rtc_search_code results as code context; retry with a focused query when more exact text is needed.",
+              "Native read is disabled by ContextSniper for this run. Use contextsniper_search_code results as code context; retry with a focused query when more exact text is needed.",
           };
         });
       }
@@ -86,13 +86,13 @@ export default definePluginEntry({
         return {
           block: true,
           blockReason:
-            "Native edit is disabled by Retrieval Token Cutter for this run. Use rtc_edit_file with old_string copied from rtc_search_code content_excerpt or a narrow native read result.",
+            "Native edit is disabled by ContextSniper for this run. Use contextsniper_edit_file with old_string copied from contextsniper_search_code content_excerpt or a narrow native read result.",
         };
       });
     }
 
     api.logger?.info?.(
-      `retrieval-token-cutter: registered tools for workspace ${config.workspaceRoot} using ${config.rtcUrl}`,
+      `contextsniper: registered tools for workspace ${config.workspaceRoot} using ${config.contextsniperUrl}`,
     );
   },
 });

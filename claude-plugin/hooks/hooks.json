@@ -1,5 +1,5 @@
 {
-  "description": "Retrieval Token Cutter hooks: compose on prompt submit, record mutating tool output, ingest transcript and stop local services on exit",
+  "description": "ContextSniper hooks: compose on prompt submit, record mutating tool output, ingest transcript and stop local services on exit",
   "hooks": {
     "PreToolUse": [
       {

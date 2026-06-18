@@ -1,10 +1,10 @@
-"""RTCFilterPlugin — Filter context shortening for RTC pipeline.
+"""ContextSniperFilterPlugin — Filter context shortening for ContextSniper pipeline.
 
 This module provides the integration layer between Filter shortening primitives
-and the RTC (Retrieval Token Cutter) pipeline. It mirrors the FilterMemoryPlugin
-interface from memory but is adapted for RTC's data formats:
+and the ContextSniper (ContextSniper) pipeline. It mirrors the FilterMemoryPlugin
+interface from memory but is adapted for ContextSniper's data formats:
 - list[dict] instead of list[SessionMessage]
-- RTC's MemoryService / SessionManager / ArchiveStore integration points
+- ContextSniper's MemoryService / SessionManager / ArchiveStore integration points
 
 Filter is NOT a compression tool — it SHORTENS context via Filter and format
 conversion while PRESERVING information density.
@@ -41,8 +41,8 @@ class MemoryShorteningStats:
     stage: str  # where in the pipeline
 
 
-class RTCFilterPlugin:
-    """Filter context shortening plugin for RTC pipeline.
+class ContextSniperFilterPlugin:
+    """Filter context shortening plugin for ContextSniper pipeline.
 
     Provides context shortening at key pipeline stages to reduce token/size
     cost without losing semantic signal.
@@ -328,13 +328,13 @@ class RTCFilterPlugin:
         ))
 
 
-# Global singleton for RTC pipeline to reuse
-_plugin: RTCFilterPlugin | None = None
+# Global singleton for ContextSniper pipeline to reuse
+_plugin: ContextSniperFilterPlugin | None = None
 
 
-def get_plugin() -> RTCFilterPlugin:
-    """Get the global RTCFilterPlugin instance."""
+def get_plugin() -> ContextSniperFilterPlugin:
+    """Get the global ContextSniperFilterPlugin instance."""
     global _plugin
     if _plugin is None:
-        _plugin = RTCFilterPlugin()
+        _plugin = ContextSniperFilterPlugin()
     return _plugin

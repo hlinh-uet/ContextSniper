@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Retrieval Token Cutter Standalone HTTP Server.
+"""ContextSniper Standalone HTTP Server.
 
-Exposes Retrieval Token Cutter lifecycle methods as RESTful endpoints so that
-multiple OpenClaw instances can share a single Retrieval Token Cutter backend.
+Exposes ContextSniper lifecycle methods as RESTful endpoints so that
+multiple OpenClaw instances can share a single ContextSniper backend.
 
 Usage:
     python server/app.py                       # dev (Flask built-in)
@@ -28,7 +28,7 @@ logging.basicConfig(
     format="%(asctime)s [%(name)s] %(levelname)s %(message)s",
     stream=sys.stderr,
 )
-logger = logging.getLogger("rtc.http")
+logger = logging.getLogger("contextsniper.http")
 
 app = Flask(__name__)
 _service: MemoryService | None = None
@@ -641,5 +641,5 @@ def handle_admin_audit_log(account_id, log_id):
 
 if __name__ == "__main__":
     cfg = get_config()
-    logger.info("Starting Retrieval Token Cutter HTTP server on :%d", cfg.http_port)
+    logger.info("Starting ContextSniper HTTP server on :%d", cfg.http_port)
     app.run(host="0.0.0.0", port=cfg.http_port, threaded=True)

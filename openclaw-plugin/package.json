@@ -1,8 +1,8 @@
 {
-  "name": "retrieval-token-cutter",
+  "name": "contextsniper",
   "version": "0.1.0",
   "type": "module",
-  "description": "OpenClaw plugin for Retrieval Token Cutter code search and edits.",
+  "description": "OpenClaw plugin for ContextSniper code search and edits.",
   "license": "MulanPSL-2.0",
   "main": "src/index.ts",
   "files": [
@@ -14,8 +14,8 @@
     "src"
   ],
   "scripts": {
-    "plugin:validate": "node --check src/index.ts && node --check src/config.ts && node --check src/filter.ts && node --check src/http.ts && node --check src/paths.ts && node --check src/policy.ts && node --check src/rtc-service.ts && node --check src/tools.ts",
-    "plugin:inspect": "openclaw plugins inspect retrieval-token-cutter --runtime --json"
+    "plugin:validate": "node --check src/index.ts && node --check src/config.ts && node --check src/filter.ts && node --check src/http.ts && node --check src/paths.ts && node --check src/policy.ts && node --check src/contextsniper-service.ts && node --check src/tools.ts",
+    "plugin:inspect": "openclaw plugins inspect contextsniper --runtime --json"
   },
   "peerDependencies": {
     "openclaw": ">=2026.5.17"
@@ -36,6 +36,6 @@
     "openclaw",
     "plugin",
     "code-search",
-    "retrieval-token-cutter"
+    "contextsniper"
   ]
 }

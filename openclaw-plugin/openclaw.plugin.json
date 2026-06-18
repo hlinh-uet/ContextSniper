@@ -1,31 +1,31 @@
 {
-  "id": "retrieval-token-cutter",
-  "name": "Retrieval Token Cutter",
-  "description": "Local code search and exact-replacement edit tools backed by Retrieval Token Cutter.",
+  "id": "contextsniper",
+  "name": "ContextSniper",
+  "description": "Local code search and exact-replacement edit tools backed by ContextSniper.",
   "version": "0.1.0",
   "activation": {
     "onStartup": true
   },
   "contracts": {
     "tools": [
-      "rtc_search_code",
-      "rtc_edit_file",
-      "rtc_index_codebase",
-      "rtc_health"
+      "contextsniper_search_code",
+      "contextsniper_edit_file",
+      "contextsniper_index_codebase",
+      "contextsniper_health"
     ]
   },
   "toolMetadata": {
-    "rtc_search_code": {
+    "contextsniper_search_code": {
       "description": "Search source, tests, docs, and release notes. content_excerpt is exact editable file text for edit replacement context; do not re-read files already returned with usable snippets."
     },
-    "rtc_edit_file": {
-      "description": "Edit source/doc files through exact replacement. Build old_string from exact RTC search snippets; if exact text is still missing after search retry, use a narrow read."
+    "contextsniper_edit_file": {
+      "description": "Edit source/doc files through exact replacement. Build old_string from exact ContextSniper search snippets; if exact text is still missing after search retry, use a narrow read."
     },
-    "rtc_index_codebase": {
+    "contextsniper_index_codebase": {
       "description": "Warm or report workspace indexing state."
     },
-    "rtc_health": {
-      "description": "Check local Retrieval Token Cutter backend health."
+    "contextsniper_health": {
+      "description": "Check local ContextSniper backend health."
     }
   },
   "configSchema": {
@@ -34,25 +34,25 @@
     "properties": {
       "repoRoot": {
         "type": "string",
-        "description": "Path to the Retrieval Token Cutter repository. Auto-detected when omitted."
+        "description": "Path to the ContextSniper repository. Auto-detected when omitted."
       },
       "workspaceRoot": {
         "type": "string",
         "description": "Default workspace root for code search/edit. Defaults to OpenClaw's current working directory."
       },
-      "rtcUrl": {
+      "contextsniperUrl": {
         "type": "string",
         "default": "http://127.0.0.1:8090",
-        "description": "Retrieval Token Cutter HTTP endpoint."
+        "description": "ContextSniper HTTP endpoint."
       },
       "runtimeDir": {
         "type": "string",
-        "description": "Runtime directory for local RTC/AGFS processes. Defaults to ~/.cache/retrieval-token-cutter-openclaw-plugin."
+        "description": "Runtime directory for local ContextSniper/AGFS processes. Defaults to ~/.cache/contextsniper-openclaw-plugin."
       },
       "autoStart": {
         "type": "boolean",
         "default": true,
-        "description": "Start RTC/AGFS when OpenClaw loads the plugin if the backend is not already healthy."
+        "description": "Start ContextSniper/AGFS when OpenClaw loads the plugin if the backend is not already healthy."
       },
       "autoStop": {
         "type": "boolean",
@@ -64,12 +64,12 @@
         "default": 45,
         "minimum": 1,
         "maximum": 180,
-        "description": "Seconds to wait for RTC backend health during startup."
+        "description": "Seconds to wait for ContextSniper backend health during startup."
       },
       "injectCodePolicy": {
         "type": "boolean",
         "default": true,
-        "description": "Inject RTC code-search/edit policy into code-like prompts."
+        "description": "Inject ContextSniper code-search/edit policy into code-like prompts."
       },
       "readToolPolicy": {
         "type": "string",
@@ -80,12 +80,12 @@
       "filterEnabled": {
         "type": "boolean",
         "default": true,
-        "description": "Enable native read and exec filtering through Retrieval Token Cutter."
+        "description": "Enable native read and exec filtering through ContextSniper."
       },
       "filterNativeRead": {
         "type": "boolean",
         "default": true,
-        "description": "Rewrite long native read results to filtered L0 files when RTC classifies them as filterable."
+        "description": "Rewrite long native read results to filtered L0 files when ContextSniper classifies them as filterable."
       },
       "filterNativeExec": {
         "type": "boolean",
@@ -101,32 +101,32 @@
       },
       "accountId": {
         "type": "string",
-        "description": "RTC account id for backend requests. Defaults to RTC_ACCOUNT_ID or acct-demo."
+        "description": "ContextSniper account id for backend requests. Defaults to CONTEXTSNIPER_ACCOUNT_ID or acct-demo."
       },
       "userId": {
         "type": "string",
-        "description": "RTC user id for backend requests. Defaults to RTC_USER_ID or u-openclaw."
+        "description": "ContextSniper user id for backend requests. Defaults to CONTEXTSNIPER_USER_ID or u-openclaw."
       },
       "agentId": {
         "type": "string",
-        "description": "RTC agent id for backend requests. Defaults to RTC_AGENT_ID or openclaw."
+        "description": "ContextSniper agent id for backend requests. Defaults to CONTEXTSNIPER_AGENT_ID or openclaw."
       },
       "sessionId": {
         "type": "string",
-        "description": "Optional RTC session id for backend requests."
+        "description": "Optional ContextSniper session id for backend requests."
       }
     }
   },
   "uiHints": {
     "repoRoot": {
-      "label": "RTC repository root",
+      "label": "ContextSniper repository root",
       "advanced": true
     },
     "workspaceRoot": {
       "label": "Workspace root"
     },
-    "rtcUrl": {
-      "label": "RTC URL",
+    "contextsniperUrl": {
+      "label": "ContextSniper URL",
       "placeholder": "http://127.0.0.1:8090"
     },
     "runtimeDir": {
@@ -158,19 +158,19 @@
       "advanced": true
     },
     "accountId": {
-      "label": "RTC account id",
+      "label": "ContextSniper account id",
       "advanced": true
     },
     "userId": {
-      "label": "RTC user id",
+      "label": "ContextSniper user id",
       "advanced": true
     },
     "agentId": {
-      "label": "RTC agent id",
+      "label": "ContextSniper agent id",
       "advanced": true
     },
     "sessionId": {
-      "label": "RTC session id",
+      "label": "ContextSniper session id",
       "advanced": true
     }
   }

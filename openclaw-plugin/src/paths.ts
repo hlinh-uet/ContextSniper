@@ -14,7 +14,7 @@ export function currentPluginRoot(importMetaUrl: string): string {
 export function findRepoRoot(pluginRoot: string, configured?: string): string {
   const candidates = [];
   if (configured) candidates.push(path.resolve(configured));
-  if (process.env.RTC_SOURCE_TREE) candidates.push(path.resolve(process.env.RTC_SOURCE_TREE));
+  if (process.env.CONTEXTSNIPER_SOURCE_TREE) candidates.push(path.resolve(process.env.CONTEXTSNIPER_SOURCE_TREE));
   candidates.push(path.dirname(pluginRoot));
   candidates.push(process.cwd());
 
@@ -22,7 +22,7 @@ export function findRepoRoot(pluginRoot: string, configured?: string): string {
     let cursor = start;
     for (;;) {
       if (
-        fs.existsSync(path.join(cursor, "claude-plugin", "scripts", "rtc_terminal.py")) &&
+        fs.existsSync(path.join(cursor, "claude-plugin", "scripts", "contextsniper_terminal.py")) &&
         fs.existsSync(path.join(cursor, "server", "app.py"))
       ) {
         return cursor;

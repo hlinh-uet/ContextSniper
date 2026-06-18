@@ -72,7 +72,7 @@ async function filterRead(
   ensureBackend: () => Promise<void>,
   logger: Logger,
 ): Promise<unknown> {
-  if (!config.filterEnabled || !config.filterNativeRead || !boolEnv("RTC_FILTER_NATIVE_READ", true)) return undefined;
+  if (!config.filterEnabled || !config.filterNativeRead || !boolEnv("CONTEXTSNIPER_FILTER_NATIVE_READ", true)) return undefined;
   const params = toolParams(event);
   if (!params) return undefined;
   if (params.offset !== undefined || params.limit !== undefined) return undefined;
@@ -104,12 +104,12 @@ async function filterRead(
       10000,
     ));
     if (!data?.ok || !data.filtered_file_path) {
-      logger.info?.(`retrieval-token-cutter: read filter skipped reason=${String(data?.reason || data?.error || "unknown")}`);
+      logger.info?.(`contextsniper: read filter skipped reason=${String(data?.reason || data?.error || "unknown")}`);
       return undefined;
     }
 
     logger.info?.(
-      `retrieval-token-cutter: read filtered detected=${String(data.detected || "")} chars=${String(data.original_chars || "")}->${String(data.filtered_chars || "")}`,
+      `contextsniper: read filtered detected=${String(data.detected || "")} chars=${String(data.original_chars || "")}->${String(data.filtered_chars || "")}`,
     );
     return {
       params: {
@@ -118,7 +118,7 @@ async function filterRead(
       },
     };
   } catch (error) {
-    logger.warn?.(`retrieval-token-cutter: read filter failed: ${String(error)}`);
+    logger.warn?.(`contextsniper: read filter failed: ${String(error)}`);
     return undefined;
   }
 }
@@ -129,7 +129,7 @@ async function filterExec(
   ensureBackend: () => Promise<void>,
   logger: Logger,
 ): Promise<unknown> {
-  if (!config.filterEnabled || !config.filterNativeExec || !boolEnv("RTC_FILTER_NATIVE_BASH", true)) return undefined;
+  if (!config.filterEnabled || !config.filterNativeExec || !boolEnv("CONTEXTSNIPER_FILTER_NATIVE_BASH", true)) return undefined;
   const params = toolParams(event);
   if (!params) return undefined;
   const command = commandFromParams(params);
@@ -139,7 +139,7 @@ async function filterExec(
   try {
     await ensureBackend();
   } catch (error) {
-    logger.warn?.(`retrieval-token-cutter: exec filter backend unavailable: ${String(error)}`);
+    logger.warn?.(`contextsniper: exec filter backend unavailable: ${String(error)}`);
     return undefined;
   }
 
@@ -172,7 +172,7 @@ import urllib.request
 
 
 def post_json(path: str, body: dict, timeout: float = 30.0) -> dict:
-    url = (os.environ.get("RTC_URL") or ${JSON.stringify(config.rtcUrl)}).rstrip("/") + path
+    url = (os.environ.get("CONTEXTSNIPER_URL") or ${JSON.stringify(config.contextsniperUrl)}).rstrip("/") + path
     req = urllib.request.Request(
         url,
         data=json.dumps(body).encode("utf-8"),
@@ -200,7 +200,7 @@ def main() -> int:
     body["output"] = proc.stdout or ""
     body["exit_code"] = proc.returncode
     try:
-        result = post_json("/api/v1/filter_bash", body, timeout=float(os.environ.get("RTC_FILTER_BASH_TIMEOUT", "30")))
+        result = post_json("/api/v1/filter_bash", body, timeout=float(os.environ.get("CONTEXTSNIPER_FILTER_BASH_TIMEOUT", "30")))
     except Exception:
         sys.stdout.write(proc.stdout or "")
         return proc.returncode
@@ -219,7 +219,7 @@ if __name__ == "__main__":
   await fs.chmod(wrapperPath, 0o755);
 
   const rewritten = `${shellQuote(pythonBin())} ${shellQuote(wrapperPath)} ${shellQuote(payloadPath)}`;
-  logger.info?.(`retrieval-token-cutter: wrapped exec category=${category} command=${command.slice(0, 120)}`);
+  logger.info?.(`contextsniper: wrapped exec category=${category} command=${command.slice(0, 120)}`);
   return {
     params: {
       ...params,

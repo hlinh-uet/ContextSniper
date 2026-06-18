@@ -28,7 +28,7 @@ async function waitForBackend(config: ResolvedConfig): Promise<void> {
   let lastError: unknown;
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(`${config.rtcUrl}/api/v1/health`, {
+      const response = await fetch(`${config.contextsniperUrl}/api/v1/health`, {
         method: "GET",
         headers: headers(),
         signal: AbortSignal.timeout(2000),
@@ -40,11 +40,11 @@ async function waitForBackend(config: ResolvedConfig): Promise<void> {
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  throw new Error(`Retrieval Token Cutter backend is unavailable at ${config.rtcUrl}: ${String(lastError)}`);
+  throw new Error(`ContextSniper backend is unavailable at ${config.contextsniperUrl}: ${String(lastError)}`);
 }
 
 export async function getJson(config: ResolvedConfig, route: string, timeoutMs = 10000): Promise<unknown> {
-  const response = await fetch(`${config.rtcUrl}${route}`, {
+  const response = await fetch(`${config.contextsniperUrl}${route}`, {
     method: "GET",
     headers: headers(),
     signal: AbortSignal.timeout(timeoutMs),
@@ -61,7 +61,7 @@ export async function postJson(
   timeoutMs = 30000,
 ): Promise<unknown> {
   await waitForBackend(config);
-  const response = await fetch(`${config.rtcUrl}${route}`, {
+  const response = await fetch(`${config.contextsniperUrl}${route}`, {
     method: "POST",
     headers: headers(),
     body: JSON.stringify(body),

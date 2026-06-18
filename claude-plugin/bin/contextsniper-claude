@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$HERE/.." && pwd)"
+
+if [ -f "$ROOT/setup_env.sh" ]; then
+  # shellcheck disable=SC1091
+  source "$ROOT/setup_env.sh"
+fi
+
+export CONTEXTSNIPER_CLAUDE_PLUGIN_DIR="${CONTEXTSNIPER_CLAUDE_PLUGIN_DIR:-$HERE}"
+exec claude --plugin-dir "$CONTEXTSNIPER_CLAUDE_PLUGIN_DIR" "$@"

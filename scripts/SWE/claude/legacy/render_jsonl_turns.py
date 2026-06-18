@@ -7,7 +7,7 @@ Usage:
 Behavior:
   - Prints user and assistant turns in order.
   - Groups assistant text/thinking/tool calls together.
-  - If a turn calls `mcp__retrieval-token-cutter__search_code`, prints the MCP result inline.
+  - If a turn calls `mcp__contextsniper__search_code`, prints the MCP result inline.
 """
 
 from __future__ import annotations
@@ -263,7 +263,7 @@ def main() -> int:
                 is_error = bool(result.get("is_error"))
                 label = "[tool_result:error]" if is_error else "[tool_result]"
                 print(label)
-                if name == "mcp__retrieval-token-cutter__search_code":
+                if name == "mcp__contextsniper__search_code":
                     text = _extract_text_content(content)
                     text = _format_search_code_result(text)
                     print(_shorten(text, args.max_chars))

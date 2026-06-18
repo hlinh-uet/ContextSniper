@@ -16,7 +16,7 @@ from typing import Any, Callable, Optional
 from core.models import RequestContext
 from session.models import SessionMessage, SessionMeta, SessionWindowState
 
-logger = logging.getLogger("rtc.session")
+logger = logging.getLogger("contextsniper.session")
 
 # ---------------------------------------------------------------------------
 # SessionBuffer — in-memory message accumulator

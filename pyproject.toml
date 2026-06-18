@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "context-engine"
+name = "contextsniper"
 version = "0.1.0"
 description = "Long-term memory infrastructure for AI Agents"
 readme = "README.md"
 license = { text = "MulanPSL-2.0" }
 requires-python = ">=3.11"
 authors = [
-    { name = "ContextEngine Team" }
+    { name = "ContextSniper Team" }
 ]
 keywords = ["ai", "agents", "memory", "llm", "rag"]
 classifiers = [
@@ -42,7 +42,7 @@ dev = [
     "mypy>=1.0.0",
 ]
 
-# Claude plugin / MCP runtime used by claude-plugin/ and the RTC SWE runner.
+# Claude plugin / MCP runtime used by claude-plugin/ and the ContextSniper SWE runner.
 mcp = [
     "mcp>=1.0.0",
 ]
@@ -66,14 +66,14 @@ e2e = [
 
 # All extras
 all = [
-    "context-engine[opengauss,chroma,sentence-transformers]",
+    "contextsniper[opengauss,chroma,sentence-transformers]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/retrieval-token-cutter/retrieval-token-cutter"
-Documentation = "https://github.com/retrieval-token-cutter/retrieval-token-cutter#readme"
-Repository = "https://github.com/retrieval-token-cutter/retrieval-token-cutter.git"
-Issues = "https://github.com/retrieval-token-cutter/retrieval-token-cutter/issues"
+Homepage = "https://github.com/Calluking/ContextSniper"
+Documentation = "https://github.com/Calluking/ContextSniper#readme"
+Repository = "https://github.com/Calluking/ContextSniper.git"
+Issues = "https://github.com/Calluking/ContextSniper/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = [

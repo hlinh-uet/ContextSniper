@@ -1,4 +1,4 @@
-"""Unified configuration for Retrieval Token Cutter.
+"""Unified configuration for ContextSniper.
 
 Loads all parameters from a single YAML file, falling back to environment
 variables for any values not specified.  When no YAML file exists the
@@ -28,18 +28,18 @@ if os.path.isfile(_dotenv_path):
     except ImportError:
         pass
 
-logger = logging.getLogger("rtc.config")
+logger = logging.getLogger("contextsniper.config")
 
 # Hard-coded allowlist for secret helper executables. Keep empty by default so
 # command-based API key helpers are disabled until an explicit code change
 # allows a reviewed helper path.
 ALLOWED_SECRET_HELPERS: tuple[str, ...] = ()
 
-# Search order: RTC_CONFIG env → {project_root}/rtc.yaml → /etc/rtc/config.yaml
+# Search order: CONTEXTSNIPER_CONFIG env → {project_root}/contextsniper.yaml → /etc/contextsniper/config.yaml
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_PROJECT_CONFIG = os.path.join(_PROJECT_ROOT, "rtc.yaml")
+_PROJECT_CONFIG = os.path.join(_PROJECT_ROOT, "contextsniper.yaml")
 DEFAULT_CONFIG_PATH = (
-    _PROJECT_CONFIG if os.path.isfile(_PROJECT_CONFIG) else "/etc/rtc/config.yaml"
+    _PROJECT_CONFIG if os.path.isfile(_PROJECT_CONFIG) else "/etc/contextsniper/config.yaml"
 )
 
 
@@ -305,8 +305,8 @@ def _run_secret_command(command_spec: SecretCommandSpec, *, label: str) -> str:
 
 
 @dataclass
-class RtcConfig:
-    """All rtcory configuration in one place."""
+class ContextSniperConfig:
+    """All factory configuration in one place."""
 
     # -- LLM ------------------------------------------------------------------
     provider: str = "mock"
@@ -381,16 +381,16 @@ class RtcConfig:
     # -------------------------------------------------------------------------
 
     @classmethod
-    def load(cls, config_path: str | None = None) -> RtcConfig:
+    def load(cls, config_path: str | None = None) -> ContextSniperConfig:
         """Load config: YAML first, then fill gaps from env vars.
 
         Args:
-            config_path: Explicit path to YAML.  Falls back to ``RTC_CONFIG``
-                         env var, then ``/etc/rtc/config.yaml``.
+            config_path: Explicit path to YAML.  Falls back to ``CONTEXTSNIPER_CONFIG``
+                         env var, then ``/etc/contextsniper/config.yaml``.
         """
         path = (
             config_path
-            or os.environ.get("RTC_CONFIG")
+            or os.environ.get("CONTEXTSNIPER_CONFIG")
             or DEFAULT_CONFIG_PATH
         )
         raw = _load_yaml(path)
@@ -408,26 +408,26 @@ class RtcConfig:
         cache = raw.get("cache") or {}
 
         base_url = _normalize_url(
-            _resolve(llm.get("base_url"), "RTC_BASE_URL", None)
+            _resolve(llm.get("base_url"), "CONTEXTSNIPER_BASE_URL", None)
         )
         emb_base_url = _normalize_url(
-            _resolve(emb.get("base_url"), "RTC_EMBEDDING_BASE_URL", None)
+            _resolve(emb.get("base_url"), "CONTEXTSNIPER_EMBEDDING_BASE_URL", None)
         )
-        llm_api_key = _first_non_none(llm.get("api_key"), os.environ.get("RTC_API_KEY"))
-        emb_api_key = _first_non_none(emb.get("api_key"), os.environ.get("RTC_EMBEDDING_API_KEY"))
+        llm_api_key = _first_non_none(llm.get("api_key"), os.environ.get("CONTEXTSNIPER_API_KEY"))
+        emb_api_key = _first_non_none(emb.get("api_key"), os.environ.get("CONTEXTSNIPER_EMBEDDING_API_KEY"))
         llm_api_key_command = None if llm_api_key is not None else _resolve_command_spec(
             llm.get("api_key_command", llm.get("api_key_cmd")),
-            ("RTC_API_KEY_CMD", "RTC_API_KEY_COMMAND"),
+            ("CONTEXTSNIPER_API_KEY_CMD", "CONTEXTSNIPER_API_KEY_COMMAND"),
             label="llm.api_key",
         )
         emb_api_key_command = None if emb_api_key is not None else _resolve_command_spec(
             emb.get("api_key_command", emb.get("api_key_cmd")),
-            ("RTC_EMBEDDING_API_KEY_CMD", "RTC_EMBEDDING_API_KEY_COMMAND"),
+            ("CONTEXTSNIPER_EMBEDDING_API_KEY_CMD", "CONTEXTSNIPER_EMBEDDING_API_KEY_COMMAND"),
             label="embedding.api_key",
         )
         embedding_provider = _resolve(emb.get("provider"), "EMBEDDING_PROVIDER", None)
         embedding_model = _resolve(
-            emb.get("model"), "RTC_EMBEDDING_MODEL", "text-embedding-ada-002",
+            emb.get("model"), "CONTEXTSNIPER_EMBEDDING_MODEL", "text-embedding-ada-002",
         )
         dimension_raw = _first_non_none(vdb.get("dimension"), os.environ.get("OPENGAUSS_DIMENSION"))
         if dimension_raw is None:
@@ -441,7 +441,7 @@ class RtcConfig:
             openai_api_key=llm_api_key,
             openai_api_key_command=llm_api_key_command,
             openai_base_url=base_url,
-            openai_llm_model=_resolve(llm.get("model"), "RTC_LLM_MODEL", "gpt-4o-mini"),
+            openai_llm_model=_resolve(llm.get("model"), "CONTEXTSNIPER_LLM_MODEL", "gpt-4o-mini"),
             llm_temperature=_resolve(llm.get("temperature"), "LLM_TEMPERATURE", 0.7, float),
             llm_max_tokens=_resolve(llm.get("max_tokens"), "LLM_MAX_TOKENS", 4096, int),
             llm_json_mode=_resolve_bool(llm.get("json_mode"), "LLM_JSON_MODE", False),
@@ -452,7 +452,7 @@ class RtcConfig:
             openai_embedding_api_key=emb_api_key,
             openai_embedding_api_key_command=emb_api_key_command,
             embedding_multimodal=_resolve_bool(
-                emb.get("multimodal"), "RTC_EMBEDDING_MULTIMODAL", False,
+                emb.get("multimodal"), "CONTEXTSNIPER_EMBEDDING_MULTIMODAL", False,
             ),
             st_model=_resolve(emb.get("st_model"), "ST_MODEL", "BAAI/bge-m3"),
             # Vector DB
@@ -474,19 +474,19 @@ class RtcConfig:
                 vdb.get("chroma_collection"), "CHROMA_COLLECTION", "contextengine",
             ),
             # Service
-            http_port=_resolve(svc.get("http_port"), "RTC_HTTP_PORT", 8090, int),
-            workers=_resolve(svc.get("workers"), "RTC_WORKERS", 2, int),
-            code_toggle=_resolve_bool(svc.get("code_toggle"), "RTC_CODE_TOGGLE", False),
+            http_port=_resolve(svc.get("http_port"), "CONTEXTSNIPER_HTTP_PORT", 8090, int),
+            workers=_resolve(svc.get("workers"), "CONTEXTSNIPER_WORKERS", 2, int),
+            code_toggle=_resolve_bool(svc.get("code_toggle"), "CONTEXTSNIPER_CODE_TOGGLE", False),
             http_ip_allowlist=_resolve_list(
-                svc.get("http_ip_allowlist"), "RTC_HTTP_IP_ALLOWLIST", [],
+                svc.get("http_ip_allowlist"), "CONTEXTSNIPER_HTTP_IP_ALLOWLIST", [],
             ),
             http_ip_allowlist_trust_proxy=_resolve_bool(
                 svc.get("http_ip_allowlist_trust_proxy"),
-                "RTC_HTTP_IP_ALLOWLIST_TRUST_PROXY",
+                "CONTEXTSNIPER_HTTP_IP_ALLOWLIST_TRUST_PROXY",
                 False,
             ),
             http_trusted_proxies=_resolve_list(
-                svc.get("http_trusted_proxies"), "RTC_HTTP_TRUSTED_PROXIES", [],
+                svc.get("http_trusted_proxies"), "CONTEXTSNIPER_HTTP_TRUSTED_PROXIES", [],
             ),
             # AGFS
             agfs_base_url=_resolve(
@@ -499,43 +499,43 @@ class RtcConfig:
             index_interval=_resolve(idx.get("interval"), "INDEX_INTERVAL", 30, int),
             index_workers=_resolve(idx.get("workers"), "INDEX_WORKERS", 1, int),
             # Identity
-            account_id=_resolve(ident.get("account_id"), "RTC_ACCOUNT_ID", "acct-demo"),
-            user_id=_resolve(ident.get("user_id"), "RTC_USER_ID", "u-alice"),
-            agent_id=_resolve(ident.get("agent_id"), "RTC_AGENT_ID", "main"),
+            account_id=_resolve(ident.get("account_id"), "CONTEXTSNIPER_ACCOUNT_ID", "acct-demo"),
+            user_id=_resolve(ident.get("user_id"), "CONTEXTSNIPER_USER_ID", "u-alice"),
+            agent_id=_resolve(ident.get("agent_id"), "CONTEXTSNIPER_AGENT_ID", "main"),
             role_control_enabled=_resolve_bool(
-                auth.get("role_control_enabled"), "RTC_ROLE_CONTROL_ENABLED", False,
+                auth.get("role_control_enabled"), "CONTEXTSNIPER_ROLE_CONTROL_ENABLED", False,
             ),
-            root_api_key=_resolve(auth.get("root_api_key"), "RTC_ROOT_API_KEY", None),
+            root_api_key=_resolve(auth.get("root_api_key"), "CONTEXTSNIPER_ROOT_API_KEY", None),
             admin_api_keys=_resolve_list(
-                auth.get("admin_api_keys"), "RTC_ADMIN_API_KEYS", [],
+                auth.get("admin_api_keys"), "CONTEXTSNIPER_ADMIN_API_KEYS", [],
             ),
             agent_shared_mode=_resolve(
-                sharing.get("agent_shared_mode"), "RTC_AGENT_SHARED_MODE", "off",
+                sharing.get("agent_shared_mode"), "CONTEXTSNIPER_AGENT_SHARED_MODE", "off",
             ),
             agent_shared_list=_resolve_list(
-                sharing.get("agent_shared_list"), "RTC_AGENT_SHARED_LIST", [],
+                sharing.get("agent_shared_list"), "CONTEXTSNIPER_AGENT_SHARED_LIST", [],
             ),
             # Memory extraction
             after_turn_threshold=_resolve(
                 memory.get("after_turn_threshold"),
-                "RTC_AFTER_TURN_THRESHOLD", 200, int,
+                "CONTEXTSNIPER_AFTER_TURN_THRESHOLD", 200, int,
             ),
             rolling_compress_enabled=_resolve_bool(
                 memory.get("rolling_compress_enabled"),
-                "RTC_ROLLING_COMPRESS_ENABLED", False,
+                "CONTEXTSNIPER_ROLLING_COMPRESS_ENABLED", False,
             ),
             directory_summary_enabled=_resolve_bool(
                 memory.get("directory_summary_enabled"),
-                "RTC_DIRECTORY_SUMMARY_ENABLED", False,
+                "CONTEXTSNIPER_DIRECTORY_SUMMARY_ENABLED", False,
             ),
             summary_max_chars=_resolve(
                 memory.get("summary_max_chars"),
-                "RTC_SUMMARY_MAX_CHARS", 4000, int,
+                "CONTEXTSNIPER_SUMMARY_MAX_CHARS", 4000, int,
             ),
             # Cache
-            enable_cache=_resolve_bool(cache.get("enabled"), "RTC_CACHE_ENABLED", True),
+            enable_cache=_resolve_bool(cache.get("enabled"), "CONTEXTSNIPER_CACHE_ENABLED", True),
             cache_max_size=_resolve(
-                cache.get("max_size"), "RTC_CACHE_MAX_SIZE", 1000, int,
+                cache.get("max_size"), "CONTEXTSNIPER_CACHE_MAX_SIZE", 1000, int,
             ),
         )
 
@@ -576,7 +576,7 @@ class RtcConfig:
     def to_provider_config(self):
         """Convert to a legacy ``ProviderConfig`` instance."""
         from providers.config import ProviderConfig
-        return ProviderConfig.from_rtc_config(self)
+        return ProviderConfig.from_contextsniper_config(self)
 
     def dump_summary(self) -> dict[str, Any]:
         """Return a sanitised dict suitable for logging (keys masked)."""
@@ -600,10 +600,10 @@ class RtcConfig:
 # Module-level singleton (lazy)
 # ---------------------------------------------------------------------------
 
-_global_config: RtcConfig | None = None
+_global_config: ContextSniperConfig | None = None
 
 
-def get_config(config_path: str | None = None) -> RtcConfig:
+def get_config(config_path: str | None = None) -> ContextSniperConfig:
     """Return the module-level singleton, creating it on first call.
 
     Configuration is process-scoped and cached after the first load. Runtime
@@ -612,7 +612,7 @@ def get_config(config_path: str | None = None) -> RtcConfig:
     """
     global _global_config
     if _global_config is None:
-        _global_config = RtcConfig.load(config_path)
+        _global_config = ContextSniperConfig.load(config_path)
         logger.info("Global config loaded: %s", _global_config.dump_summary())
     return _global_config
 

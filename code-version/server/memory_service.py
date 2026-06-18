@@ -1,4 +1,4 @@
-"""MemoryService — Core Retrieval Token Cutter business logic, decoupled from transport.
+"""MemoryService — Core ContextSniper business logic, decoupled from transport.
 
 Used by both:
   - server/app.py        (HTTP / Flask mode)
@@ -30,7 +30,7 @@ from session.session_manager import SessionManager
 from session.rolling_compressor import RollingCompressor
 from providers.config import ProviderConfig
 from providers.llm import get_openai_llm
-from providers.unified_config import RtcConfig, get_config
+from providers.unified_config import ContextSniperConfig, get_config
 from retrieval.pipeline import RetrievalPipeline
 from retrieval.query_planner import QueryPlanner, sanitize_query
 from retrieval.seed_retriever import SeedRetriever
@@ -55,7 +55,7 @@ try:
 except ImportError:
     _HAS_AGFS = False
 
-logger = logging.getLogger("rtc.service")
+logger = logging.getLogger("contextsniper.service")
 
 # Fallback archive-trim safety margin used only when incoming messages cannot
 # be aligned with the session buffer.  It preserves a likely in-flight
@@ -63,7 +63,7 @@ logger = logging.getLogger("rtc.service")
 _ARCHIVE_TRIM_UNMATCHED_TAIL_MARGIN = 2
 
 _CODE_SELECTION_MAX_FILES = 200
-_CODE_SELECTION_MAX_PATHS = int(os.environ.get("RTC_COMPOSE_MAX_CODE_PATHS", "100"))
+_CODE_SELECTION_MAX_PATHS = int(os.environ.get("CONTEXTSNIPER_COMPOSE_MAX_CODE_PATHS", "100"))
 _CODE_EXTENSIONS = {
     ".py", ".ts", ".tsx", ".js", ".jsx", ".go", ".rs", ".java",
     ".c", ".cc", ".cpp", ".cxx", ".h", ".hpp",
@@ -86,13 +86,13 @@ _DEFAULT_CODE_SEARCH_EMBED_MAX_FILES = 80
 _DEFAULT_CODE_SEARCH_MAX_SNIPPETS = 500
 
 _CODE_RETRIEVAL_ENV = {
-    "semantic": "RTC_RETRIEVAL_SEMANTIC_ENABLED",
-    "embedding": "RTC_RETRIEVAL_SEMANTIC_ENABLED",
-    "frequency": "RTC_RETRIEVAL_FREQUENCY_ENABLED",
-    "bm25": "RTC_RETRIEVAL_FREQUENCY_ENABLED",
-    "symbolic": "RTC_RETRIEVAL_SYMBOLIC_ENABLED",
-    "ctags": "RTC_RETRIEVAL_SYMBOLIC_ENABLED",
-    "graph": "RTC_RETRIEVAL_GRAPH_ENABLED",
+    "semantic": "CONTEXTSNIPER_RETRIEVAL_SEMANTIC_ENABLED",
+    "embedding": "CONTEXTSNIPER_RETRIEVAL_SEMANTIC_ENABLED",
+    "frequency": "CONTEXTSNIPER_RETRIEVAL_FREQUENCY_ENABLED",
+    "bm25": "CONTEXTSNIPER_RETRIEVAL_FREQUENCY_ENABLED",
+    "symbolic": "CONTEXTSNIPER_RETRIEVAL_SYMBOLIC_ENABLED",
+    "ctags": "CONTEXTSNIPER_RETRIEVAL_SYMBOLIC_ENABLED",
+    "graph": "CONTEXTSNIPER_RETRIEVAL_GRAPH_ENABLED",
 }
 
 
@@ -111,7 +111,7 @@ def _code_retrieval_enabled(route: str) -> bool:
 
 
 def _bootstrap_max_files() -> int:
-    raw = os.environ.get("RTC_BOOTSTRAP_MAX_FILES", str(DEFAULT_BOOTSTRAP_INGEST_MAX_FILES))
+    raw = os.environ.get("CONTEXTSNIPER_BOOTSTRAP_MAX_FILES", str(DEFAULT_BOOTSTRAP_INGEST_MAX_FILES))
     try:
         n = int(raw)
     except ValueError:
@@ -120,7 +120,7 @@ def _bootstrap_max_files() -> int:
 
 
 def _bootstrap_full_index_cap_files() -> int | None:
-    raw = os.environ.get("RTC_BOOTSTRAP_FULL_INDEX_CAP_FILES", "0")
+    raw = os.environ.get("CONTEXTSNIPER_BOOTSTRAP_FULL_INDEX_CAP_FILES", "0")
     try:
         n = int(raw)
     except ValueError:
@@ -131,11 +131,11 @@ def _bootstrap_full_index_cap_files() -> int | None:
 
 
 def _code_sync_enabled() -> bool:
-    return _env_bool("RTC_CODE_SYNC_ON_PROMPT", True)
+    return _env_bool("CONTEXTSNIPER_CODE_SYNC_ON_PROMPT", True)
 
 
 def _code_sync_max_files() -> int:
-    raw = os.environ.get("RTC_CODE_SYNC_MAX_FILES", str(DEFAULT_CODE_SYNC_MAX_FILES))
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SYNC_MAX_FILES", str(DEFAULT_CODE_SYNC_MAX_FILES))
     try:
         n = int(raw)
     except ValueError:
@@ -144,7 +144,7 @@ def _code_sync_max_files() -> int:
 
 
 def _code_sync_wait_for_index_default() -> bool:
-    return _env_bool("RTC_CODE_SYNC_WAIT_FOR_INDEX", True)
+    return _env_bool("CONTEXTSNIPER_CODE_SYNC_WAIT_FOR_INDEX", True)
 
 
 def _extract_code_query_terms(query: str) -> list[str]:
@@ -163,7 +163,7 @@ def _extract_code_query_terms(query: str) -> list[str]:
 
 
 def _code_search_candidate_max_files() -> int:
-    raw = os.environ.get("RTC_CODE_SEARCH_CANDIDATE_MAX_FILES", str(_DEFAULT_CODE_SEARCH_CANDIDATE_MAX_FILES))
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_CANDIDATE_MAX_FILES", str(_DEFAULT_CODE_SEARCH_CANDIDATE_MAX_FILES))
     try:
         n = int(raw)
     except ValueError:
@@ -172,7 +172,7 @@ def _code_search_candidate_max_files() -> int:
 
 
 def _code_search_embed_max_files() -> int:
-    raw = os.environ.get("RTC_CODE_SEARCH_EMBED_MAX_FILES", str(_DEFAULT_CODE_SEARCH_EMBED_MAX_FILES))
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_EMBED_MAX_FILES", str(_DEFAULT_CODE_SEARCH_EMBED_MAX_FILES))
     try:
         n = int(raw)
     except ValueError:
@@ -181,7 +181,7 @@ def _code_search_embed_max_files() -> int:
 
 
 def _code_search_max_snippets() -> int:
-    raw = os.environ.get("RTC_CODE_SEARCH_MAX_SNIPPETS", str(_DEFAULT_CODE_SEARCH_MAX_SNIPPETS))
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_MAX_SNIPPETS", str(_DEFAULT_CODE_SEARCH_MAX_SNIPPETS))
     try:
         n = int(raw)
     except ValueError:
@@ -190,17 +190,17 @@ def _code_search_max_snippets() -> int:
 
 
 def _code_search_ingest_candidates_enabled() -> bool:
-    raw = os.environ.get("RTC_CODE_SEARCH_INGEST_CANDIDATES", "")
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_INGEST_CANDIDATES", "")
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _code_search_ingest_async_enabled() -> bool:
-    raw = os.environ.get("RTC_CODE_SEARCH_INGEST_ASYNC", "1")
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_INGEST_ASYNC", "1")
     return raw.strip().lower() not in {"0", "false", "no", "off"}
 
 
 def _code_search_ingest_max_files() -> int:
-    raw = os.environ.get("RTC_CODE_SEARCH_INGEST_MAX_FILES", "3")
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_INGEST_MAX_FILES", "3")
     try:
         n = int(raw)
     except ValueError:
@@ -209,7 +209,7 @@ def _code_search_ingest_max_files() -> int:
 
 
 def _code_search_ingest_max_chunks() -> int:
-    raw = os.environ.get("RTC_CODE_SEARCH_INGEST_MAX_CHUNKS", "40")
+    raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_INGEST_MAX_CHUNKS", "40")
     try:
         n = int(raw)
     except ValueError:
@@ -218,7 +218,7 @@ def _code_search_ingest_max_chunks() -> int:
 
 
 def _forced_code_search_limit() -> int | None:
-    raw = (os.environ.get("RTC_SEARCH_FORCE_LIMIT") or os.environ.get("RTC_SEARCH_LIMIT") or "").strip()
+    raw = (os.environ.get("CONTEXTSNIPER_SEARCH_FORCE_LIMIT") or os.environ.get("CONTEXTSNIPER_SEARCH_LIMIT") or "").strip()
     if not raw:
         return None
     try:
@@ -405,7 +405,7 @@ def _positive_int(value: object, default: int) -> int:
     return resolved if resolved > 0 else default
 
 
-def _summary_max_chars(config: RtcConfig, params: dict | None = None, default: int = 2000) -> int:
+def _summary_max_chars(config: ContextSniperConfig, params: dict | None = None, default: int = 2000) -> int:
     """Resolve request-level summary trim overrides before falling back to config."""
     config_value = _positive_int(getattr(config, "summary_max_chars", default), default)
     request_value = None if params is None else params.get("summaryMaxChars")
@@ -527,16 +527,16 @@ def build_archive_refs(
 # ---------------------------------------------------------------------------
 
 class MemoryService:
-    """Transport-agnostic Retrieval Token Cutter service.
+    """Transport-agnostic ContextSniper service.
 
     Holds lazy-initialized LLM, ReadAPI, WriteAPI instances.
     Each handler method accepts a plain dict and returns a plain dict.
     """
 
-    def __init__(self, config: RtcConfig | None = None):
+    def __init__(self, config: ContextSniperConfig | None = None):
         cfg = config or get_config()
         self._cfg = cfg
-        self._provider_cfg = ProviderConfig.from_rtc_config(cfg)
+        self._provider_cfg = ProviderConfig.from_contextsniper_config(cfg)
 
         self._agfs_base_url = cfg.agfs_base_url
         self._mount_prefix = cfg.agfs_mount_prefix
@@ -625,7 +625,7 @@ class MemoryService:
             else:
                 self._control_store = ControlPlaneStore(
                     mount_prefix=self._mount_prefix,
-                    local_root=os.path.join(os.getcwd(), ".rtc_control"),
+                    local_root=os.path.join(os.getcwd(), ".contextsniper_control"),
                 )
         return self._control_store
 
@@ -904,7 +904,7 @@ class MemoryService:
         }
 
     def _code_sync_state_dir(self, workspace_root: Path, ctx: RequestContext) -> Path:
-        runtime_dir = Path(os.environ.get("RTC_RUNTIME_DIR") or ".").expanduser().resolve()
+        runtime_dir = Path(os.environ.get("CONTEXTSNIPER_RUNTIME_DIR") or ".").expanduser().resolve()
         raw = "\0".join([
             ctx.account_id,
             ctx.user_id,
@@ -1131,7 +1131,7 @@ class MemoryService:
         if wait_for_index:
             try:
                 timeout_raw = params.get("sync_timeout_sec", params.get("syncTimeoutSec"))
-                timeout_sec = max(1.0, float(timeout_raw or os.environ.get("RTC_CODE_SYNC_TIMEOUT_SEC", "30")))
+                timeout_sec = max(1.0, float(timeout_raw or os.environ.get("CONTEXTSNIPER_CODE_SYNC_TIMEOUT_SEC", "30")))
             except (TypeError, ValueError):
                 timeout_sec = 30.0
             drain = self._drain_outbox_until_quiet(
@@ -1429,8 +1429,8 @@ class MemoryService:
         )
         ingested: list[str] = []
         workers_raw = os.environ.get(
-            "RTC_CODE_SEARCH_INGEST_WORKERS",
-            os.environ.get("RTC_BOOTSTRAP_INGEST_WORKERS", "2"),
+            "CONTEXTSNIPER_CODE_SEARCH_INGEST_WORKERS",
+            os.environ.get("CONTEXTSNIPER_BOOTSTRAP_INGEST_WORKERS", "2"),
         )
         try:
             workers = int(workers_raw)
@@ -1500,7 +1500,7 @@ class MemoryService:
 
         thread = threading.Thread(
             target=run,
-            name="rtc-code-search-candidate-ingest",
+            name="contextsniper-code-search-candidate-ingest",
             daemon=True,
         )
         thread.start()
@@ -1701,14 +1701,14 @@ class MemoryService:
             return []
 
         docs = [str(item.get("embedding_doc") or "") for item in snippets]
-        max_batch_texts_raw = os.environ.get("RTC_CODE_SEARCH_EMBED_BATCH_TEXTS", "512")
+        max_batch_texts_raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_EMBED_BATCH_TEXTS", "512")
         try:
             max_batch_texts = int(max_batch_texts_raw)
         except ValueError:
             max_batch_texts = 512
         # Leave ample headroom below provider hard caps such as OpenAI's 2048 texts/request.
         max_batch_texts = max(1, min(max_batch_texts, 1024))
-        max_batch_tokens_raw = os.environ.get("RTC_CODE_SEARCH_EMBED_BATCH_TOKENS", "100000")
+        max_batch_tokens_raw = os.environ.get("CONTEXTSNIPER_CODE_SEARCH_EMBED_BATCH_TOKENS", "100000")
         try:
             max_batch_tokens = int(max_batch_tokens_raw)
         except ValueError:
@@ -2686,11 +2686,11 @@ class MemoryService:
         raw_ctags = self._raw_scores_by_uri(ctags_score_hits)
         raw_graph = self._raw_scores_by_uri(graph_score_hits)
 
-        fuse_mode = os.environ.get("RTC_CODE_FUSE_MODE", "weighted_rrf").strip().lower()
-        w_embed = float(os.environ.get("RTC_CODE_FUSE_W_EMBED", "0.33")) if _code_retrieval_enabled("semantic") else 0.0
-        w_bm25 = float(os.environ.get("RTC_CODE_FUSE_W_BM25", "0.17")) if _code_retrieval_enabled("frequency") else 0.0
-        w_ctags = float(os.environ.get("RTC_CODE_FUSE_W_CTAGS", "0.17")) if _code_retrieval_enabled("symbolic") else 0.0
-        w_graph = float(os.environ.get("RTC_CODE_FUSE_W_GRAPH", "0.33")) if _code_retrieval_enabled("graph") else 0.0
+        fuse_mode = os.environ.get("CONTEXTSNIPER_CODE_FUSE_MODE", "weighted_rrf").strip().lower()
+        w_embed = float(os.environ.get("CONTEXTSNIPER_CODE_FUSE_W_EMBED", "0.33")) if _code_retrieval_enabled("semantic") else 0.0
+        w_bm25 = float(os.environ.get("CONTEXTSNIPER_CODE_FUSE_W_BM25", "0.17")) if _code_retrieval_enabled("frequency") else 0.0
+        w_ctags = float(os.environ.get("CONTEXTSNIPER_CODE_FUSE_W_CTAGS", "0.17")) if _code_retrieval_enabled("symbolic") else 0.0
+        w_graph = float(os.environ.get("CONTEXTSNIPER_CODE_FUSE_W_GRAPH", "0.33")) if _code_retrieval_enabled("graph") else 0.0
         route_weights = {
             "embedding": w_embed,
             "bm25": w_bm25,
@@ -3001,7 +3001,7 @@ class MemoryService:
         wait_for_index = bool(params.get("wait_for_index", params.get("waitForIndex", False)))
         timeout_raw = params.get("refresh_timeout_sec", params.get("refreshTimeoutSec"))
         if timeout_raw is None:
-            timeout_raw = os.environ.get("RTC_EDIT_REFRESH_TIMEOUT_SEC", "5")
+            timeout_raw = os.environ.get("CONTEXTSNIPER_EDIT_REFRESH_TIMEOUT_SEC", "5")
         try:
             timeout_sec = max(1, int(float(timeout_raw)))
         except (TypeError, ValueError):
@@ -3096,7 +3096,7 @@ class MemoryService:
 
         already.update(candidates)
 
-        workers_raw = os.environ.get("RTC_BOOTSTRAP_INGEST_WORKERS", "8")
+        workers_raw = os.environ.get("CONTEXTSNIPER_BOOTSTRAP_INGEST_WORKERS", "8")
         try:
             workers = int(workers_raw)
         except ValueError:
@@ -3476,7 +3476,7 @@ class MemoryService:
     ) -> dict:
         """Drain repeatedly until pending events are quiet."""
         if max_rounds is None:
-            raw = os.environ.get("RTC_SEARCH_BOOTSTRAP_DRAIN_ROUNDS", "30")
+            raw = os.environ.get("CONTEXTSNIPER_SEARCH_BOOTSTRAP_DRAIN_ROUNDS", "30")
             try:
                 max_rounds = int(raw)
             except ValueError:
@@ -3747,10 +3747,10 @@ class MemoryService:
         prompt = params.get("prompt", "")
 
         # Strip previous synthetic memory messages to prevent cumulative duplication.
-        # Synthetic messages are tagged with _rtc=True by _to_response().
+        # Synthetic messages are tagged with _contextsniper=True by _to_response().
         messages = [
             m for m in messages
-            if not (isinstance(m, dict) and m.get("_rtc"))
+            if not (isinstance(m, dict) and m.get("_contextsniper"))
         ]
         logger.info(
             "assemble entry: msgs=%d prompt_len=%d keys=%s",
@@ -4041,18 +4041,18 @@ class MemoryService:
         injected_messages = []
 
         if result.identity_context:
-            injected_messages.append({"role": "user", "content": result.identity_context, "_rtc": True})
+            injected_messages.append({"role": "user", "content": result.identity_context, "_contextsniper": True})
 
         if result.episodic_context:
-            injected_messages.append({"role": "user", "content": result.episodic_context, "_rtc": True})
+            injected_messages.append({"role": "user", "content": result.episodic_context, "_contextsniper": True})
 
         injected_messages.extend(result.messages)
 
         if result.session_context:
-            injected_messages.append({"role": "user", "content": result.session_context, "_rtc": True})
+            injected_messages.append({"role": "user", "content": result.session_context, "_contextsniper": True})
 
         if result.retrieved_evidence:
-            injected_messages.append({"role": "user", "content": result.retrieved_evidence, "_rtc": True})
+            injected_messages.append({"role": "user", "content": result.retrieved_evidence, "_contextsniper": True})
 
         return {
             "messages": injected_messages,
@@ -4101,12 +4101,12 @@ class MemoryService:
             if request_session_time is not None:
                 break
 
-        # Threshold controlled by env var RTC_AFTER_TURN_THRESHOLD.
+        # Threshold controlled by env var CONTEXTSNIPER_AFTER_TURN_THRESHOLD.
         # Default 5000 tokens (~5-10 turns). Set to 1 for ingest (always extract), 999999 for QA (never extract).
         import os as _os
-        threshold = int(_os.environ.get("RTC_AFTER_TURN_THRESHOLD", "200"))
+        threshold = int(_os.environ.get("CONTEXTSNIPER_AFTER_TURN_THRESHOLD", "200"))
         disable_after_turn_extraction = _os.environ.get(
-            "RTC_DISABLE_AFTER_TURN_EXTRACTION", ""
+            "CONTEXTSNIPER_DISABLE_AFTER_TURN_EXTRACTION", ""
         ).strip().lower() in ("1", "true", "yes", "on")
 
         # Step 1: Accumulate in session buffer (lightweight, every turn)
@@ -4573,7 +4573,7 @@ class MemoryService:
         want_full = bool(params.get("waitForFullWorkspaceIndex", False))
         timeout_raw = params.get("waitForFullWorkspaceIndexTimeoutSec")
         if timeout_raw is None:
-            timeout_raw = os.environ.get("RTC_SEARCH_BOOTSTRAP_WAIT_TIMEOUT_SEC", "180")
+            timeout_raw = os.environ.get("CONTEXTSNIPER_SEARCH_BOOTSTRAP_WAIT_TIMEOUT_SEC", "180")
         try:
             timeout_sec = max(1, int(timeout_raw))
         except (TypeError, ValueError):
@@ -4878,7 +4878,7 @@ class MemoryService:
                 "timings": timings,
             }
             try:
-                topn_each = int(os.environ.get("RTC_CODE_RETRIEVE_EACH", "5"))
+                topn_each = int(os.environ.get("CONTEXTSNIPER_CODE_RETRIEVE_EACH", "5"))
             except ValueError:
                 topn_each = 5
             topn_each = max(1, min(topn_each, 5))
@@ -5459,7 +5459,7 @@ class MemoryService:
                 if not content:
                     continue
                 try:
-                    max_lines = int(os.environ.get("RTC_FILTER_MEMORY_MAX_LINES") or "60")
+                    max_lines = int(os.environ.get("CONTEXTSNIPER_FILTER_MEMORY_MAX_LINES") or "60")
                 except ValueError:
                     max_lines = 60
                 shortened, stats = plugin.short_adaptive(content, max_lines=max_lines)
@@ -5521,7 +5521,7 @@ class MemoryService:
             return {"ok": False, "reason": "not_a_file"}
 
         try:
-            min_chars = int(os.environ.get("RTC_FILTER_READ_MIN_CHARS") or "8000")
+            min_chars = int(os.environ.get("CONTEXTSNIPER_FILTER_READ_MIN_CHARS") or "8000")
         except ValueError:
             min_chars = 8000
         original = target.read_text(encoding="utf-8", errors="replace")
@@ -5537,7 +5537,7 @@ class MemoryService:
             return {"ok": False, "reason": "filter_unavailable"}
 
         try:
-            max_lines = int(os.environ.get("RTC_FILTER_READ_MAX_LINES") or os.environ.get("RTC_FILTER_MEMORY_MAX_LINES") or "60")
+            max_lines = int(os.environ.get("CONTEXTSNIPER_FILTER_READ_MAX_LINES") or os.environ.get("CONTEXTSNIPER_FILTER_MEMORY_MAX_LINES") or "60")
         except ValueError:
             max_lines = 60
         plugin = get_plugin()
@@ -5610,7 +5610,7 @@ class MemoryService:
         ])
         filtered_for_agent = banner + filtered.rstrip() + "\n"
 
-        runtime_dir = Path(os.environ.get("RTC_RUNTIME_DIR") or ".").expanduser().resolve()
+        runtime_dir = Path(os.environ.get("CONTEXTSNIPER_RUNTIME_DIR") or ".").expanduser().resolve()
         out_dir = runtime_dir / "filtered-read"
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / f"{target.name}.{digest[:16]}.l0.txt"
@@ -5728,7 +5728,7 @@ class MemoryService:
             from filter import get_plugin
 
             try:
-                max_lines = int(os.environ.get("RTC_FILTER_BASH_MAX_LINES") or os.environ.get("RTC_FILTER_MEMORY_MAX_LINES") or "80")
+                max_lines = int(os.environ.get("CONTEXTSNIPER_FILTER_BASH_MAX_LINES") or os.environ.get("CONTEXTSNIPER_FILTER_MEMORY_MAX_LINES") or "80")
             except ValueError:
                 max_lines = 80
             plugin = get_plugin()
@@ -5743,7 +5743,7 @@ class MemoryService:
             from filter import get_plugin
 
             try:
-                max_lines = int(os.environ.get("RTC_FILTER_BASH_MAX_LINES") or os.environ.get("RTC_FILTER_MEMORY_MAX_LINES") or "80")
+                max_lines = int(os.environ.get("CONTEXTSNIPER_FILTER_BASH_MAX_LINES") or os.environ.get("CONTEXTSNIPER_FILTER_MEMORY_MAX_LINES") or "80")
             except ValueError:
                 max_lines = 80
             plugin = get_plugin()
@@ -5772,11 +5772,11 @@ class MemoryService:
             return {"ok": False, "reason": "not_whitelisted", "category": category or pre_category}
 
         try:
-            min_chars = int(os.environ.get("RTC_FILTER_BASH_MIN_CHARS") or "8000")
+            min_chars = int(os.environ.get("CONTEXTSNIPER_FILTER_BASH_MIN_CHARS") or "8000")
         except ValueError:
             min_chars = 8000
         try:
-            min_lines = int(os.environ.get("RTC_FILTER_BASH_MIN_LINES") or "100")
+            min_lines = int(os.environ.get("CONTEXTSNIPER_FILTER_BASH_MIN_LINES") or "100")
         except ValueError:
             min_lines = 100
         original_lines = len(output.splitlines())
@@ -6090,7 +6090,7 @@ class MemoryService:
         return result
 
     def health(self) -> dict:
-        info: dict = {"backend": "retrieval-token-cutter", "agfs": _HAS_AGFS}
+        info: dict = {"backend": "contextsniper", "agfs": _HAS_AGFS}
         try:
             if _HAS_AGFS:
                 AGFSClient(api_base_url=self._agfs_base_url).ls("/")

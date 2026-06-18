@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "retrieval-token-cutter": {
-      "command": "${CLAUDE_PLUGIN_ROOT}/bin/rtc-mcp",
+    "contextsniper": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/contextsniper-mcp",
       "args": []
     }
   }

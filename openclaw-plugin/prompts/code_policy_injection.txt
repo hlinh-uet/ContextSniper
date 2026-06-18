@@ -2,23 +2,23 @@
 
 Use the normal SWE-bench issue-solving workflow, with this substitution:
 
-- For code discovery, use `rtc_search_code` instead of broad grep/find/read exploration.
-- Native `read` on long logs/traces may be filtered through RTC before content is returned. The backend stores L0 as filtered content, L1 as properties, and L2 as the original output.
-- Before editing any source/code file, call `rtc_search_code` at least once with a focused query.
-- Treat paths returned by `rtc_search_code` as workspace-relative paths; do not prepend the project root.
-- If `rtc_search_code` returns the relevant file and enough surrounding code to make the patch, do not perform additional broad file exploration.
-- For source edits, use `rtc_edit_file` instead of OpenClaw's built-in edit tool.
+- For code discovery, use `contextsniper_search_code` instead of broad grep/find/read exploration.
+- Native `read` on long logs/traces may be filtered through ContextSniper before content is returned. The backend stores L0 as filtered content, L1 as properties, and L2 as the original output.
+- Before editing any source/code file, call `contextsniper_search_code` at least once with a focused query.
+- Treat paths returned by `contextsniper_search_code` as workspace-relative paths; do not prepend the project root.
+- If `contextsniper_search_code` returns the relevant file and enough surrounding code to make the patch, do not perform additional broad file exploration.
+- For source edits, use `contextsniper_edit_file` instead of OpenClaw's built-in edit tool.
 
 ## Filtering Strategy
 
-- RTC detects long logs/traces and filters them to preserve useful failure lines, traces, and tail context.
+- ContextSniper detects long logs/traces and filters them to preserve useful failure lines, traces, and tail context.
 
 Keep the workflow compact:
 
-- Prefer one focused `rtc_search_code` call; use a second only if the first result is clearly insufficient.
-- If five `rtc_search_code` calls around the same code area do not locate the needed file or context, fall back to regular workspace methods such as `find`, `grep`, or `read` instead of continuing RTC search.
+- Prefer one focused `contextsniper_search_code` call; use a second only if the first result is clearly insufficient.
+- If five `contextsniper_search_code` calls around the same code area do not locate the needed file or context, fall back to regular workspace methods such as `find`, `grep`, or `read` instead of continuing ContextSniper search.
 - Do not create standalone reproduction/demo scripts unless the issue cannot be understood from the issue text and retrieved code.
 - Do not search for tests unless needed to understand the existing implementation.
 - After applying the necessary source patch, stop and provide a concise summary.
 
-The Retrieval Token Cutter server controls the number of returned results. Call `rtc_search_code` with a focused `query`; leave `path` empty for the active workspace, or set `path` to a specific file only when intentionally narrowing the search to that file. Omit `limit` unless there is a specific reason.
+The ContextSniper server controls the number of returned results. Call `contextsniper_search_code` with a focused `query`; leave `path` empty for the active workspace, or set `path` to a specific file only when intentionally narrowing the search to that file. Omit `limit` unless there is a specific reason.

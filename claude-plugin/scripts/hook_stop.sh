@@ -16,9 +16,9 @@ else
 fi
 rm -f "$TMPFILE"
 
-if [ "${RTC_PLUGIN_AUTO_STOP:-1}" = "0" ]; then
+if [ "${CONTEXTSNIPER_PLUGIN_AUTO_STOP:-1}" = "0" ]; then
   exit 0
 fi
 
-"$PYTHON_BIN" "$HERE/rtc_terminal.py" stop >/dev/null 2>&1 || true
+"$PYTHON_BIN" "$HERE/contextsniper_terminal.py" stop >/dev/null 2>&1 || true
 exit 0

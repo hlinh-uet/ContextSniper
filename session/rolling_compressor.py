@@ -16,7 +16,7 @@ from typing import Optional
 from core.interfaces import LLM
 from session.models import SessionMessage, SessionWindowState
 
-logger = logging.getLogger("rtc.session")
+logger = logging.getLogger("contextsniper.session")
 
 
 class RollingCompressor:

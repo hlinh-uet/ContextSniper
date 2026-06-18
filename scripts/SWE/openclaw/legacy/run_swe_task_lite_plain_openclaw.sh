@@ -2,21 +2,21 @@
 set -euo pipefail
 
 # IMPORTANT: OpenClaw must run from the generated SWE workspace, not the
-# Retrieval-Token-Cutter repo root. If you edit this runner or invoke OpenClaw
+# ContextSniper repo root. If you edit this runner or invoke OpenClaw
 # manually, cd to "$WORK_DIR" before `openclaw agent`/`openclaw chat`;
 # otherwise native read/exec tools can resolve paths against the wrong project.
 
 _SCRIPTS_MCP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RTC_CACHE_HOME="${RTC_CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/retrieval-token-cutter}"
-CACHE_DIR="${SWE_CACHE_DIR:-${RTC_SWE_CACHE_DIR:-$RTC_CACHE_HOME/swe/openclaw/plain/cache}}"
+CONTEXTSNIPER_CACHE_HOME="${CONTEXTSNIPER_CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/contextsniper}"
+CACHE_DIR="${SWE_CACHE_DIR:-${CONTEXTSNIPER_SWE_CACHE_DIR:-$CONTEXTSNIPER_CACHE_HOME/swe/openclaw/plain/cache}}"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-RTC_DIR="${RTC_DIR:-$PROJECT_ROOT}"
-CLAUDE_PLUGIN_DIR="${CLAUDE_PLUGIN_DIR:-$RTC_DIR/claude-plugin}"
+CONTEXTSNIPER_DIR="${CONTEXTSNIPER_DIR:-$PROJECT_ROOT}"
+CLAUDE_PLUGIN_DIR="${CLAUDE_PLUGIN_DIR:-$CONTEXTSNIPER_DIR/claude-plugin}"
 export OPENCLAW_MODEL="${OPENCLAW_MODEL:-deepseek/deepseek-v4-flash}"
 PY_BIN="${PY_BIN:-python3}"
 
-PARENT_ENV_SH="$PROJECT_ROOT/source_rtc_env.sh"
+PARENT_ENV_SH="$PROJECT_ROOT/source_contextsniper_env.sh"
 if [ -f "$PARENT_ENV_SH" ]; then
   # shellcheck disable=SC1090
   . "$PARENT_ENV_SH" >/dev/null
@@ -26,7 +26,7 @@ if [ -f "$PROJECT_ROOT/setup_env.sh" ]; then
   # shellcheck disable=SC1091
   . "$PROJECT_ROOT/setup_env.sh" >/dev/null
   PY_BIN="${PY_BIN:-python3}"
-  CLAUDE_PLUGIN_DIR="${RTC_CLAUDE_PLUGIN_DIR:-$CLAUDE_PLUGIN_DIR}"
+  CLAUDE_PLUGIN_DIR="${CONTEXTSNIPER_CLAUDE_PLUGIN_DIR:-$CLAUDE_PLUGIN_DIR}"
 fi
 
 # Priority: first CLI arg > env > default.
@@ -60,8 +60,8 @@ PY
   fi
 
     echo "[setup] Installing runtime deps with uv sync --extra mcp --extra swe ..." >&2
-  (cd "$RTC_DIR" && uv sync --extra mcp --extra swe)
-  PY_BIN="$RTC_DIR/.venv/bin/python"
+  (cd "$CONTEXTSNIPER_DIR" && uv sync --extra mcp --extra swe)
+  PY_BIN="$CONTEXTSNIPER_DIR/.venv/bin/python"
 
   if ! "$PY_BIN" - <<'PY' >/dev/null 2>&1
 import flask
@@ -87,7 +87,7 @@ _swe_prompt_exports="$(
 eval "$_swe_prompt_exports"
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
-OUTPUT_ROOT="${SWE_OUTPUT_ROOT:-${RTC_SWE_OUTPUT_ROOT:-$_SCRIPTS_MCP_DIR/output_logs}}"
+OUTPUT_ROOT="${SWE_OUTPUT_ROOT:-${CONTEXTSNIPER_SWE_OUTPUT_ROOT:-$_SCRIPTS_MCP_DIR/output_logs}}"
 EXPERIMENT_DIR="$OUTPUT_ROOT/${STAMP}-swe-lite-openclaw-plain-r${RUN_IDX}-p$$"
 LOGS_DIR="$EXPERIMENT_DIR/logs"
 WORK_DIR="$EXPERIMENT_DIR/workspace"
@@ -207,7 +207,7 @@ fi
 
 WORKSPACE_GIT_MOVED=0
 OPENCLAW_PLUGINS_BACKUP="$LOGS_DIR/openclaw-plugins-config.before.json"
-OPENCLAW_PLUGIN_PATCH="$LOGS_DIR/openclaw-disable-rtc-plugin.patch.json"
+OPENCLAW_PLUGIN_PATCH="$LOGS_DIR/openclaw-disable-contextsniper-plugin.patch.json"
 disable_generated_workspace_git() {
   [ "${WORKSPACE_GIT_MOVED:-0}" = "0" ] || return 0
   [ -n "${WORK_DIR:-}" ] || return 0
@@ -258,10 +258,10 @@ OPENCLAW_AGENT_ID="${OPENCLAW_AGENT_ID:-swe-openclaw-plain-r${RUN_IDX}-p$$}"
 OPENCLAW_SESSION_ID="${OPENCLAW_SESSION_ID:-swe-openclaw-plain-r${RUN_IDX}-p$$}"
 OPENCLAW_TIMEOUT="${OPENCLAW_TIMEOUT:-900}"
 
-echo "[setup] Disabling RTC plugin for plain OpenClaw SWE run" >&2
+echo "[setup] Disabling ContextSniper plugin for plain OpenClaw SWE run" >&2
 openclaw config get plugins > "$OPENCLAW_PLUGINS_BACKUP" 2> "$LOGS_DIR/openclaw-config-get-plugins.stderr" || echo '{}' > "$OPENCLAW_PLUGINS_BACKUP"
-openclaw config set plugins.entries.retrieval-token-cutter.enabled false --strict-json \
-  > "$LOGS_DIR/openclaw-config-disable-rtc.log" 2>&1 || true
+openclaw config set plugins.entries.contextsniper.enabled false --strict-json \
+  > "$LOGS_DIR/openclaw-config-disable-contextsniper.log" 2>&1 || true
 openclaw config set plugins.allow null --strict-json \
   > "$LOGS_DIR/openclaw-config-allow-default-tools.log" 2>&1 || true
 
@@ -346,14 +346,14 @@ summary = {
     "tool_calls": tool_calls,
     "tool_results": tool_results,
     "tool_names": sorted({str(t.get("name")) for t in tool_calls if t.get("name")}),
-    "has_rtc_search_code": any(t.get("name") == "rtc_search_code" for t in tool_calls),
-    "has_rtc_edit_file": any(t.get("name") == "rtc_edit_file" for t in tool_calls),
-    "has_successful_rtc_edit_file": any(
-        t.get("name") == "rtc_edit_file" and not t.get("isError") for t in tool_results
+    "has_contextsniper_search_code": any(t.get("name") == "contextsniper_search_code" for t in tool_calls),
+    "has_contextsniper_edit_file": any(t.get("name") == "contextsniper_edit_file" for t in tool_calls),
+    "has_successful_contextsniper_edit_file": any(
+        t.get("name") == "contextsniper_edit_file" and not t.get("isError") for t in tool_results
     ),
     "used_builtin_edit": any(t.get("name") == "edit" for t in tool_calls),
     "edited_test_file": any(
-        t.get("name") in {"rtc_edit_file", "edit", "write", "file_write"}
+        t.get("name") in {"contextsniper_edit_file", "edit", "write", "file_write"}
         and (
             "/test" in str((t.get("arguments") or {}).get("file_path") or (t.get("arguments") or {}).get("path") or "")
             or str((t.get("arguments") or {}).get("file_path") or (t.get("arguments") or {}).get("path") or "").split("/")[-1].startswith("test_")

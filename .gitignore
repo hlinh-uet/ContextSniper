@@ -25,19 +25,19 @@ env.sh
 output_logs/
 scripts_code_mcp/
 
-scripts/SWE/claude/RTC/.cache/
-scripts/SWE/claude/RTC/repo/
-scripts/SWE/claude/RTC/output_logs/
-scripts/SWE/claude/RTC/output_logs*
-scripts/SWE/claude/RTC/include/
-scripts/SWE/claude/RTC/__pycache__/
+scripts/SWE/claude/ContextSniper/.cache/
+scripts/SWE/claude/ContextSniper/repo/
+scripts/SWE/claude/ContextSniper/output_logs/
+scripts/SWE/claude/ContextSniper/output_logs*
+scripts/SWE/claude/ContextSniper/include/
+scripts/SWE/claude/ContextSniper/__pycache__/
 
-scripts/SWE/claude/RTC-FILTER/.cache/
-scripts/SWE/claude/RTC-FILTER/repo/
-scripts/SWE/claude/RTC-FILTER/output_logs/
-scripts/SWE/claude/RTC-FILTER/output_logs*
-scripts/SWE/claude/RTC-FILTER/include/
-scripts/SWE/claude/RTC-FILTER/__pycache__/
+scripts/SWE/claude/ContextSniper-FILTER/.cache/
+scripts/SWE/claude/ContextSniper-FILTER/repo/
+scripts/SWE/claude/ContextSniper-FILTER/output_logs/
+scripts/SWE/claude/ContextSniper-FILTER/output_logs*
+scripts/SWE/claude/ContextSniper-FILTER/include/
+scripts/SWE/claude/ContextSniper-FILTER/__pycache__/
 
 scripts/SWE/claude/legacy/.cache/
 scripts/SWE/claude/legacy/repo/
@@ -46,19 +46,19 @@ scripts/SWE/claude/legacy/output_logs*
 scripts/SWE/claude/legacy/include/
 scripts/SWE/claude/legacy/__pycache__/
 
-scripts/SWE/openclaw/RTC/.cache/
-scripts/SWE/openclaw/RTC/repo/
-scripts/SWE/openclaw/RTC/output_logs/
-scripts/SWE/openclaw/RTC/output_logs*
-scripts/SWE/openclaw/RTC/include/
-scripts/SWE/openclaw/RTC/__pycache__/
+scripts/SWE/openclaw/ContextSniper/.cache/
+scripts/SWE/openclaw/ContextSniper/repo/
+scripts/SWE/openclaw/ContextSniper/output_logs/
+scripts/SWE/openclaw/ContextSniper/output_logs*
+scripts/SWE/openclaw/ContextSniper/include/
+scripts/SWE/openclaw/ContextSniper/__pycache__/
 
-scripts/SWE/openclaw/RTC-FILTER/.cache/
-scripts/SWE/openclaw/RTC-FILTER/repo/
-scripts/SWE/openclaw/RTC-FILTER/output_logs/
-scripts/SWE/openclaw/RTC-FILTER/output_logs*
-scripts/SWE/openclaw/RTC-FILTER/include/
-scripts/SWE/openclaw/RTC-FILTER/__pycache__/
+scripts/SWE/openclaw/ContextSniper-FILTER/.cache/
+scripts/SWE/openclaw/ContextSniper-FILTER/repo/
+scripts/SWE/openclaw/ContextSniper-FILTER/output_logs/
+scripts/SWE/openclaw/ContextSniper-FILTER/output_logs*
+scripts/SWE/openclaw/ContextSniper-FILTER/include/
+scripts/SWE/openclaw/ContextSniper-FILTER/__pycache__/
 
 
 scripts/SWE/openclaw/legacy/.cache/
@@ -70,17 +70,17 @@ scripts/SWE/openclaw/legacy/__pycache__/
 
 scripts/SMOKE*
 
-# RTC/AGFS runtime data
+# ContextSniper/AGFS runtime data
 agfs/build/
 agfs-data/
-rtc-runtime/
+contextsniper-runtime/
 workspace.git/
 
 # Artifacts from development tools
 artifacts/
 
 # README diagram scratch outputs. The curated README assets live in
-# docs/assets/readme/RTC/ and are intentionally not ignored.
+# docs/assets/readme/ContextSniper/ and are intentionally not ignored.
 docs/assets/readme/generate_readme_diagrams.py
 docs/assets/readme/generate_style_previews.py
 docs/assets/readme/architecture.png

@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/readme/RTC/LOGO_BACKGROUND.png" alt="Retrieval Token Cutter" width="760">
+  <img src="docs/assets/readme/ContextSniper/LOGO_BACKGROUND.png" alt="ContextSniper" width="760">
 </p>
 
-# Retrieval Token Cutter
+# ContextSniper
 
 <p align="center">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MulanPSL--2.0-blue.svg"></a>
@@ -10,7 +10,7 @@
   <a href="pyproject.toml"><img alt="Version" src="https://img.shields.io/badge/version-0.1.0-blue.svg"></a>
   <a href="claude-plugin/"><img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-purple.svg"></a>
   <a href="openclaw-plugin/"><img alt="OpenClaw" src="https://img.shields.io/badge/OpenClaw-plugin-blue.svg"></a>
-  <a href="filter/"><img alt="RTC Filter" src="https://img.shields.io/badge/filter-read%20%2B%20bash-orange.svg"></a>
+  <a href="filter/"><img alt="ContextSniper Filter" src="https://img.shields.io/badge/filter-read%20%2B%20bash-orange.svg"></a>
   <a href="agfs/"><img alt="AGFS" src="https://img.shields.io/badge/AGFS-local%20memory-teal.svg"></a>
 </p>
 
@@ -31,7 +31,7 @@ model.
 
 ### Claude Average Per Task
 
-| Metric | Legacy&nbsp;&nbsp;&nbsp;&nbsp; | RTC&nbsp;&nbsp;&nbsp;&nbsp; | RTC Filter&nbsp;&nbsp;&nbsp;&nbsp; | RTC Reduction | RTC Filter Reduction |
+| Metric | Legacy&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper Filter&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper Reduction | ContextSniper Filter Reduction |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Input tokens | 1,534,963 | 941,761 | 810,396 | -39% | <strong><font color="#26C889">-47%</font></strong> |
 | Output tokens | 16,969 | 11,656 | 11,946 | <strong><font color="#26C889">-31%</font></strong> | -30% |
@@ -39,7 +39,7 @@ model.
 
 ### OpenClaw Average Per Task
 
-| Metric | Legacy&nbsp;&nbsp;&nbsp;&nbsp; | RTC&nbsp;&nbsp;&nbsp;&nbsp; | RTC Filter&nbsp;&nbsp;&nbsp;&nbsp; | RTC Reduction | RTC Filter Reduction |
+| Metric | Legacy&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper Filter&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper Reduction | ContextSniper Filter Reduction |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Input tokens | 1,309,937 | 769,590 | 622,321 | -41% | <strong><font color="#26C889">-52%</font></strong> |
 | Output tokens | 17,439 | 10,399 | 12,982 | <strong><font color="#26C889">-40%</font></strong> | -26% |
@@ -47,25 +47,25 @@ model.
 
 ## Overview
 
-Retrieval Token Cutter ships two local plugins:
+ContextSniper ships two local plugins:
 
 | Host | Plugin | What it adds |
 | --- | --- | --- |
 | Claude Code | [claude-plugin/](claude-plugin/) | MCP tools for code search/edit plus prompt policy injection |
 | OpenClaw | [openclaw-plugin/](openclaw-plugin/) | Native tools, prompt policy injection, and read/exec filtering |
 
-Both plugins can start the local Retrieval Token Cutter backend and AGFS service
+Both plugins can start the local ContextSniper backend and AGFS service
 for you, then stop the services they started when the host exits.
 
-![Runtime architecture](<docs/assets/readme/RTC/EN_Runtime Architecture.png>)
+![Runtime architecture](<docs/assets/readme/ContextSniper/EN_Runtime Architecture.png>)
 
 ## Quickstart
 
 Prepare a fresh checkout once:
 
 ```bash
-git clone https://github.com/Calluking/RTC-Retrieval-Token-Cutter.git
-cd RTC-Retrieval-Token-Cutter
+git clone https://github.com/Calluking/ContextSniper.git
+cd ContextSniper
 ./bootstrap.sh
 ```
 
@@ -80,9 +80,9 @@ Export your model and embedding settings:
 export DEEPSEEK_API_KEY="<your-deepseek-key>"
 export DEEPSEEK_BASE_URL="https://api.deepseek.com"
 export OPENCLAW_MODEL="deepseek/deepseek-v4-flash"
-export RTC_EMBEDDING_API_KEY="<your-embedding-key>"
-export RTC_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
-export RTC_EMBEDDING_MODEL="text-embedding-3-small"
+export CONTEXTSNIPER_EMBEDDING_API_KEY="<your-embedding-key>"
+export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
+export CONTEXTSNIPER_EMBEDDING_MODEL="text-embedding-3-small"
 export ANTHROPIC_MODEL="haiku"
 ```
 
@@ -97,7 +97,7 @@ source setup_env.sh
 validation is optional; install that heavier stack only when needed with
 `./bootstrap.sh --install-swe-deps`.
 
-![Fresh clone quickstart](<docs/assets/readme/RTC/EN_Fresh Clone Start.png>)
+![Fresh clone quickstart](<docs/assets/readme/ContextSniper/EN_Fresh Clone Start.png>)
 
 ## Start Claude
 
@@ -105,7 +105,7 @@ From the project you want Claude to edit:
 
 ```bash
 cd /path/to/project
-claude --plugin-dir "$RTC_DIR/claude-plugin"
+claude --plugin-dir "$CONTEXTSNIPER_DIR/claude-plugin"
 ```
 
 Do not pass `--mcp-config`; the Claude plugin owns its `.mcp.json`.
@@ -138,37 +138,37 @@ Claude:
 Expected status:
 
 ```text
-retrieval-token-cutter Plugin · inline · ✔ enabled
-└ retrieval-token-cutter MCP · ✔ connected
+contextsniper Plugin · inline · ✔ enabled
+└ contextsniper MCP · ✔ connected
 ```
 
 OpenClaw:
 
 ```bash
-openclaw plugins inspect retrieval-token-cutter --runtime --json
+openclaw plugins inspect contextsniper --runtime --json
 ```
 
 The runtime output should include:
 
 ```text
-rtc_health
-rtc_index_codebase
-rtc_search_code
-rtc_edit_file
+contextsniper_health
+contextsniper_index_codebase
+contextsniper_search_code
+contextsniper_edit_file
 ```
 
-To confirm a run used RTC search/filtering:
+To confirm a run used ContextSniper search/filtering:
 
 ```bash
 latest=$(ls -t ~/.openclaw/agents/*/sessions/*.jsonl | grep -v trajectory | head -1)
-rg -n "Retrieval Token Cutter|FILTER IS TRIGGERED|rtc_search_code|rtc_edit_file" "$latest"
+rg -n "ContextSniper|FILTER IS TRIGGERED|contextsniper_search_code|contextsniper_edit_file" "$latest"
 ```
 
 For Claude, inspect the current Claude debug log or the `/plugin` panel. A
 healthy code run should show MCP tool names containing `search_code` and
 `edit_file`.
 
-![Code task flow](<docs/assets/readme/RTC/EN_Code Task Flow.png>)
+![Code task flow](<docs/assets/readme/ContextSniper/EN_Code Task Flow.png>)
 
 ## Configuration
 
@@ -180,15 +180,15 @@ Common settings:
 
 | Variable | Purpose |
 | --- | --- |
-| `RTC_EMBEDDING_API_KEY` | API key for real semantic code search |
-| `RTC_EMBEDDING_BASE_URL` | OpenAI-compatible embedding endpoint |
-| `RTC_EMBEDDING_MODEL` | Embedding model name |
+| `CONTEXTSNIPER_EMBEDDING_API_KEY` | API key for real semantic code search |
+| `CONTEXTSNIPER_EMBEDDING_BASE_URL` | OpenAI-compatible embedding endpoint |
+| `CONTEXTSNIPER_EMBEDDING_MODEL` | Embedding model name |
 | `PY_BIN` | Optional Python override for plugin/backend runtime |
-| `RTC_FILTER_ENABLED` | Toggle read/exec filtering, default `1` |
-| `RTC_INJECT_FILTERING_PROMPT` | Toggle the filtering-strategy prompt section |
+| `CONTEXTSNIPER_FILTER_ENABLED` | Toggle read/exec filtering, default `1` |
+| `CONTEXTSNIPER_INJECT_FILTERING_PROMPT` | Toggle the filtering-strategy prompt section |
 
 `requirements.txt` includes `httpx[socks]`, and `setup_env.sh` sets
-`NO_PROXY`/`no_proxy` for `127.0.0.1`, `localhost`, and `::1` so local RTC/AGFS
+`NO_PROXY`/`no_proxy` for `127.0.0.1`, `localhost`, and `::1` so local ContextSniper/AGFS
 traffic bypasses HTTP(S)/SOCKS proxies.
 
 ## Useful Files
@@ -214,6 +214,6 @@ This project is licensed under the Mulan Permissive Software License v2
 
 ## References
 
-- [AGFS](https://github.com/c4pt0r/agfs): RTC bundles and builds the local AGFS
+- [AGFS](https://github.com/c4pt0r/agfs): ContextSniper bundles and builds the local AGFS
   server under [agfs/](agfs/) and uses `pyagfs` for local memory/file-service
   operations.

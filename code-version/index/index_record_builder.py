@@ -54,8 +54,8 @@ def _extract_account_id(uri: str) -> str:
 
 
 def _parse_enabled_index_levels() -> tuple[int, ...]:
-    """Parse enabled index levels from `RTC_INDEX_LEVELS`."""
-    raw = str(os.environ.get("RTC_INDEX_LEVELS", "") or "").strip()
+    """Parse enabled index levels from `CONTEXTSNIPER_INDEX_LEVELS`."""
+    raw = str(os.environ.get("CONTEXTSNIPER_INDEX_LEVELS", "") or "").strip()
     if not raw:
         return (0, 1, 2)
 

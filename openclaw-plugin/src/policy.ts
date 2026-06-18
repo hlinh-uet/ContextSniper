@@ -21,7 +21,7 @@ const CODE_WORDS = [
 const FILTERING_PROMPT_HEADING = "## Filtering Strategy";
 const FILTERING_PROMPT_END_MARKER = "Keep the workflow compact:";
 const FILTERING_PROMPT_BULLETS = [
-  "- Native `read` on long logs/traces may be filtered through RTC before content is returned. The backend stores L0 as filtered content, L1 as properties, and L2 as the original output.",
+  "- Native `read` on long logs/traces may be filtered through ContextSniper before content is returned. The backend stores L0 as filtered content, L1 as properties, and L2 as the original output.",
 ];
 
 function truthyEnv(name: string, fallback = "0"): boolean {
@@ -41,7 +41,7 @@ function numberEnv(name: string, fallback: number, min: number, max: number): nu
   return Math.max(min, Math.min(max, Math.trunc(parsed)));
 }
 
-export function renderPolicyPrompt(text: string, includeFiltering = truthyEnv("RTC_INJECT_FILTERING_PROMPT", "0")): string {
+export function renderPolicyPrompt(text: string, includeFiltering = truthyEnv("CONTEXTSNIPER_INJECT_FILTERING_PROMPT", "0")): string {
   if (includeFiltering) return text.trim();
 
   let rendered = text;
@@ -84,7 +84,7 @@ function extractPrompt(event: any): string {
 }
 
 async function syncWorkspaceOnPrompt(api: any, config: ResolvedConfig, ensureBackend?: () => Promise<void>): Promise<void> {
-  if (!boolEnv("RTC_CODE_SYNC_ON_PROMPT", true)) return;
+  if (!boolEnv("CONTEXTSNIPER_CODE_SYNC_ON_PROMPT", true)) return;
   try {
     await ensureBackend?.();
     const data = await postJson(
@@ -97,21 +97,21 @@ async function syncWorkspaceOnPrompt(api: any, config: ResolvedConfig, ensureBac
         agentId: config.agentId,
         workspaceRoot: config.workspaceRoot,
         reason: "before_prompt_build",
-        wait_for_index: boolEnv("RTC_CODE_SYNC_WAIT_FOR_INDEX", true),
+        wait_for_index: boolEnv("CONTEXTSNIPER_CODE_SYNC_WAIT_FOR_INDEX", true),
       },
-      numberEnv("RTC_CODE_SYNC_HOOK_TIMEOUT_MS", 30000, 1000, 180000),
+      numberEnv("CONTEXTSNIPER_CODE_SYNC_HOOK_TIMEOUT_MS", 30000, 1000, 180000),
     );
     const result = data && typeof data === "object" && !Array.isArray(data) ? data as Record<string, unknown> : {};
     if (result.ok) {
       const apply = result.apply && typeof result.apply === "object" ? result.apply as Record<string, unknown> : {};
       api.logger?.info?.(
-        `retrieval-token-cutter: code sync mode=${String(result.mode || "")} changed=${String(result.changed_count || 0)} deleted=${String(result.deleted_count || 0)} ingested=${String(apply.ingested_count || 0)}`,
+        `contextsniper: code sync mode=${String(result.mode || "")} changed=${String(result.changed_count || 0)} deleted=${String(result.deleted_count || 0)} ingested=${String(apply.ingested_count || 0)}`,
       );
     } else {
-      api.logger?.warn?.(`retrieval-token-cutter: code sync skipped/failed: ${JSON.stringify(result).slice(0, 800)}`);
+      api.logger?.warn?.(`contextsniper: code sync skipped/failed: ${JSON.stringify(result).slice(0, 800)}`);
     }
   } catch (error) {
-    api.logger?.warn?.(`retrieval-token-cutter: code sync failed: ${String(error)}`);
+    api.logger?.warn?.(`contextsniper: code sync failed: ${String(error)}`);
   }
 }
 
@@ -123,7 +123,7 @@ export function registerPolicyHook(api: any, config: ResolvedConfig, ensureBacke
     try {
       policy = renderPolicyPrompt(fs.readFileSync(promptPath, "utf8"));
     } catch (error) {
-      api.logger?.warn?.(`retrieval-token-cutter: failed to read policy prompt: ${String(error)}`);
+      api.logger?.warn?.(`contextsniper: failed to read policy prompt: ${String(error)}`);
     }
   }
 
@@ -132,7 +132,7 @@ export function registerPolicyHook(api: any, config: ResolvedConfig, ensureBacke
     if (!prompt || prompt.startsWith("/")) return event;
     await syncWorkspaceOnPrompt(api, config, ensureBackend);
     if (!config.injectCodePolicy || !policy || !looksLikeCodePrompt(prompt)) return event;
-    const context = `[Retrieval Token Cutter]\n${policy}`;
+    const context = `[ContextSniper]\n${policy}`;
     return {
       ...event,
       injectedContext: event?.injectedContext ? `${event.injectedContext}\n\n${context}` : context,

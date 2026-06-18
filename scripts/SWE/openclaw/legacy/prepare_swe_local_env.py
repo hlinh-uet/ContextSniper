@@ -6,6 +6,7 @@ import shlex
 import subprocess
 import sys
 import fcntl
+import shutil
 from pathlib import Path
 
 from swebench.harness.test_spec.test_spec import make_test_spec
@@ -21,8 +22,19 @@ def sanitize(value: str, limit: int = 80) -> str:
 
 
 def conda_base() -> str:
+    candidates = [
+        os.environ.get("CONDA_EXE"),
+        shutil.which("conda"),
+        str(Path.home() / "miniconda3" / "bin" / "conda"),
+        str(Path.home() / "anaconda3" / "bin" / "conda"),
+    ]
+    conda = next((item for item in candidates if item and Path(item).is_file()), "")
+    if not conda:
+        raise FileNotFoundError(
+            "conda executable not found. Set CONDA_EXE or add conda to PATH."
+        )
     proc = subprocess.run(
-        ["conda", "info", "--base"],
+        [conda, "info", "--base"],
         capture_output=True,
         text=True,
         check=True,
@@ -71,6 +83,49 @@ def run_create_script(script: str, log_path: Path) -> int:
         f"$ bash -lc {shell_quote(script)}\n\n[stdout]\n{proc.stdout}\n\n[stderr]\n{proc.stderr}\n"
     )
     return proc.returncode
+
+
+def _read_local_requirements(path: Path, seen: set[Path] | None = None) -> str:
+    seen = seen or set()
+    path = path.resolve()
+    if path in seen:
+        return ""
+    seen.add(path)
+    lines: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("-r"):
+            nested = stripped[len("-r") :].strip()
+            if nested:
+                nested_path = (path.parent / nested).resolve()
+                if nested_path.is_file():
+                    lines.append(_read_local_requirements(nested_path, seen))
+            continue
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def install_local_requirements_fallback(workspace: Path) -> None:
+    import swebench.harness.test_spec.python as swe_python
+
+    original = swe_python.get_requirements_by_commit
+
+    def get_requirements_by_commit(repo: str, commit: str) -> str:
+        try:
+            return original(repo, commit)
+        except Exception as exc:
+            for req_path in swe_python.MAP_REPO_TO_REQS_PATHS.get(repo, []):
+                candidate = workspace / req_path
+                if candidate.is_file():
+                    print(
+                        f"[setup] Remote requirements lookup failed ({exc}); "
+                        f"using local {candidate}",
+                        file=sys.stderr,
+                    )
+                    return _read_local_requirements(candidate)
+            raise
+
+    swe_python.get_requirements_by_commit = get_requirements_by_commit
 
 
 def write_helper_script(path: Path, env_prefix: Path, base: str, cmd_log: Path) -> None:
@@ -166,6 +221,7 @@ def main() -> int:
     use_per_run_env = os.environ.get("SWE_LOCAL_ENV_PER_RUN", "1") != "0"
 
     instance = json.loads(instance_path.read_text())
+    install_local_requirements_fallback(workspace)
     test_spec = make_test_spec(instance, instance_image_tag="local")
     base = conda_base()
     base_env_key = sanitize(f"{instance.get('repo','repo').replace('/','__')}__{instance.get('version','unknown')}")

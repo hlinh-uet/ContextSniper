@@ -2,13 +2,13 @@
 set -euo pipefail
 
 # IMPORTANT: Agent commands must run from the generated SWE workspace, not the
-# Retrieval-Token-Cutter repo root. If you edit this runner or invoke the agent
+# ContextSniper repo root. If you edit this runner or invoke the agent
 # manually, cd to "$WORK_DIR" first; otherwise native file tools can resolve
 # paths against the wrong project.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RTC_CACHE_HOME="${RTC_CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/retrieval-token-cutter}"
-CACHE_DIR="${SWE_CACHE_DIR:-${RTC_SWE_CACHE_DIR:-$RTC_CACHE_HOME/swe-pro/plain/cache}}"
+CONTEXTSNIPER_CACHE_HOME="${CONTEXTSNIPER_CACHE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/contextsniper}"
+CACHE_DIR="${SWE_CACHE_DIR:-${CONTEXTSNIPER_SWE_CACHE_DIR:-$CONTEXTSNIPER_CACHE_HOME/swe-pro/plain/cache}}"
 PY_BIN="${PY_BIN:-python3}"
 export CLAUDE_MODEL="${CLAUDE_MODEL:-claude-haiku-4-5-20251001}"
 export SWE_PRO_INSTANCE_ID="${1:-${SWE_PRO_INSTANCE_ID:-instance_qutebrowser__qutebrowser-f91ace96223cac8161c16dd061907e138fe85111-v059c6fdc75567943479b23ebca7c07b5e9a7f34c}}"
@@ -48,7 +48,7 @@ prompt_exports="$(
 eval "$prompt_exports"
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
-OUTPUT_ROOT="${SWE_OUTPUT_ROOT:-${RTC_SWE_OUTPUT_ROOT:-$SCRIPT_DIR/output_logs}}"
+OUTPUT_ROOT="${SWE_OUTPUT_ROOT:-${CONTEXTSNIPER_SWE_OUTPUT_ROOT:-$SCRIPT_DIR/output_logs}}"
 EXPERIMENT_DIR="$OUTPUT_ROOT/${STAMP}-swe-pro-plain-r${RUN_IDX}-p$$"
 LOGS_DIR="$EXPERIMENT_DIR/logs"
 WORK_DIR="$EXPERIMENT_DIR/workspace"

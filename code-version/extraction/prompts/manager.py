@@ -40,13 +40,13 @@ class PromptManager:
             template_dir: Path to templates directory.
                          Defaults to extraction/prompts/templates/
             code_mode: Whether code-mode prompt overrides are enabled.
-                       Defaults to ``RTC_CODE_TOGGLE``.
+                       Defaults to ``CONTEXTSNIPER_CODE_TOGGLE``.
         """
         if template_dir is None:
             template_dir = _DEFAULT_TEMPLATE_DIR
         self._template_dir = Path(template_dir)
         if code_mode is None:
-            code_mode = str(os.environ.get("RTC_CODE_TOGGLE", "")).strip().lower() in ("1", "true", "yes")
+            code_mode = str(os.environ.get("CONTEXTSNIPER_CODE_TOGGLE", "")).strip().lower() in ("1", "true", "yes")
         self._code_mode = bool(code_mode)
         self._env = Environment(
             loader=FileSystemLoader(str(self._template_dir)),

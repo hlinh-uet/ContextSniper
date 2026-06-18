@@ -17,7 +17,7 @@ usage() {
   cat <<'EOF'
 Usage: ./bootstrap.sh [options]
 
-Prepare a fresh Retrieval Token Cutter checkout for local Claude/OpenClaw use.
+Prepare a fresh ContextSniper checkout for local Claude/OpenClaw use.
 
 Options:
   -y, --yes                 Accept recommended installer prompts.
@@ -257,7 +257,7 @@ prepare_openclaw_plugin_dir() {
     return 0
   fi
 
-  PLUGIN_DIR="${RTC_OPENCLAW_PLUGIN_DIR:-$HOME/.cache/retrieval-token-cutter/openclaw-plugin}"
+  PLUGIN_DIR="${CONTEXTSNIPER_OPENCLAW_PLUGIN_DIR:-$HOME/.cache/contextsniper/openclaw-plugin}"
   local cache_root
   cache_root="$(dirname "$PLUGIN_DIR")"
   log "copying OpenClaw plugin to current-user-owned path: $PLUGIN_DIR"
@@ -338,12 +338,12 @@ ensure_openclaw_model_auth() {
 
 verify_openclaw_runtime() {
   local inspect
-  if ! inspect="$(openclaw plugins inspect retrieval-token-cutter --runtime --json 2>&1)"; then
+  if ! inspect="$(openclaw plugins inspect contextsniper --runtime --json 2>&1)"; then
     printf '%s\n' "$inspect" >&2
     die "OpenClaw plugin installed but runtime inspection failed"
   fi
-  printf '%s\n' "$inspect" | grep -q "rtc_search_code" || die "OpenClaw plugin loaded, but rtc_search_code was not visible"
-  printf '%s\n' "$inspect" | grep -q "rtc_edit_file" || die "OpenClaw plugin loaded, but rtc_edit_file was not visible"
+  printf '%s\n' "$inspect" | grep -q "contextsniper_search_code" || die "OpenClaw plugin loaded, but contextsniper_search_code was not visible"
+  printf '%s\n' "$inspect" | grep -q "contextsniper_edit_file" || die "OpenClaw plugin loaded, but contextsniper_edit_file was not visible"
   log "OpenClaw plugin runtime verified"
 }
 
@@ -370,7 +370,7 @@ setup_claude_integration() {
 
   if [ "$INSTALL_CLAUDE" -eq 1 ]; then
     ensure_claude_cli
-    log "Claude helper ready: $ROOT_DIR/claude-plugin/bin/rtc-claude"
+    log "Claude helper ready: $ROOT_DIR/claude-plugin/bin/contextsniper-claude"
   fi
 }
 
@@ -393,9 +393,9 @@ setup_openclaw_integration() {
     ensure_openclaw_model_auth
     prepare_openclaw_plugin_dir
     log "installing linked OpenClaw plugin"
-    openclaw plugins uninstall retrieval-token-cutter --force >/dev/null 2>&1 || true
+    openclaw plugins uninstall contextsniper --force >/dev/null 2>&1 || true
     openclaw plugins install --link "$PLUGIN_DIR" --dangerously-force-unsafe-install
-    openclaw plugins enable retrieval-token-cutter
+    openclaw plugins enable contextsniper
     verify_openclaw_runtime
     warn_openclaw_auth
   fi
@@ -498,7 +498,7 @@ Next:
      source "$ROOT_DIR/setup_env.sh"
   3. If you set up Claude, start Claude from a target project:
      cd /path/to/project
-     $ROOT_DIR/claude-plugin/bin/rtc-claude
+     $ROOT_DIR/claude-plugin/bin/contextsniper-claude
   4. If you set up OpenClaw, start OpenClaw from a target project:
      cd /path/to/project
      openclaw chat --local

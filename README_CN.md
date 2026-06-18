@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/readme/RTC/LOGO_BACKGROUND.png" alt="Retrieval Token Cutter" width="760">
+  <img src="docs/assets/readme/ContextSniper/LOGO_BACKGROUND.png" alt="ContextSniper" width="760">
 </p>
 
-# Retrieval Token Cutter
+# ContextSniper
 
 <p align="center">
   <a href="LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-MulanPSL--2.0-blue.svg"></a>
@@ -10,11 +10,11 @@
   <a href="pyproject.toml"><img alt="版本" src="https://img.shields.io/badge/version-0.1.0-blue.svg"></a>
   <a href="claude-plugin/"><img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-purple.svg"></a>
   <a href="openclaw-plugin/"><img alt="OpenClaw" src="https://img.shields.io/badge/OpenClaw-plugin-blue.svg"></a>
-  <a href="filter/"><img alt="RTC 过滤" src="https://img.shields.io/badge/filter-read%20%2B%20bash-orange.svg"></a>
+  <a href="filter/"><img alt="ContextSniper 过滤" src="https://img.shields.io/badge/filter-read%20%2B%20bash-orange.svg"></a>
   <a href="agfs/"><img alt="AGFS" src="https://img.shields.io/badge/AGFS-local%20memory-teal.svg"></a>
 </p>
 
-让 Claude Code 或 OpenClaw 通过 Retrieval Token Cutter 语义代码搜索、长输出过滤和精确替换编辑来理解并修改本地代码库。
+让 Claude Code 或 OpenClaw 通过 ContextSniper 语义代码搜索、长输出过滤和精确替换编辑来理解并修改本地代码库。
 
 [English README](README.md)
 
@@ -29,7 +29,7 @@ SWE Lite 验证报告包含 Claude Code 和 OpenClaw 运行的 token 与轮次�
 
 ### Claude 单任务平均值
 
-| 指标 | 原版&nbsp;&nbsp;&nbsp;&nbsp; | RTC&nbsp;&nbsp;&nbsp;&nbsp; | RTC Filter&nbsp;&nbsp;&nbsp;&nbsp; | RTC 降低 | RTC Filter 降低 |
+| 指标 | 原版&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper Filter&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper 降低 | ContextSniper Filter 降低 |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Input tokens | 1,534,963 | 941,761 | 810,396 | -39% | <strong><font color="#26C889">-47%</font></strong> |
 | Output tokens | 16,969 | 11,656 | 11,946 | <strong><font color="#26C889">-31%</font></strong> | -30% |
@@ -37,7 +37,7 @@ SWE Lite 验证报告包含 Claude Code 和 OpenClaw 运行的 token 与轮次�
 
 ### OpenClaw 单任务平均值
 
-| 指标 | 原版&nbsp;&nbsp;&nbsp;&nbsp; | RTC&nbsp;&nbsp;&nbsp;&nbsp; | RTC Filter&nbsp;&nbsp;&nbsp;&nbsp; | RTC 降低 | RTC Filter 降低 |
+| 指标 | 原版&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper Filter&nbsp;&nbsp;&nbsp;&nbsp; | ContextSniper 降低 | ContextSniper Filter 降低 |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Input tokens | 1,309,937 | 769,590 | 622,321 | -41% | <strong><font color="#26C889">-52%</font></strong> |
 | Output tokens | 17,439 | 10,399 | 12,982 | <strong><font color="#26C889">-40%</font></strong> | -26% |
@@ -45,24 +45,24 @@ SWE Lite 验证报告包含 Claude Code 和 OpenClaw 运行的 token 与轮次�
 
 ## 概览
 
-Retrieval Token Cutter 提供两个本地插件：
+ContextSniper 提供两个本地插件：
 
 | 宿主 | 插件 | 能力 |
 | --- | --- | --- |
 | Claude Code | [claude-plugin/](claude-plugin/) | MCP 代码搜索/编辑工具，以及 prompt 策略注入 |
 | OpenClaw | [openclaw-plugin/](openclaw-plugin/) | 原生工具、prompt 策略注入，以及 read/exec 过滤 |
 
-两个插件都可以自动启动本地 Retrieval Token Cutter 后端和 AGFS 服务，并在宿主退出时停止自己启动的服务。
+两个插件都可以自动启动本地 ContextSniper 后端和 AGFS 服务，并在宿主退出时停止自己启动的服务。
 
-![运行架构](<docs/assets/readme/RTC/CN_Runtime Architecture.png>)
+![运行架构](<docs/assets/readme/ContextSniper/CN_Runtime Architecture.png>)
 
 ## 快速开始
 
 在全新 checkout 中先准备一次：
 
 ```bash
-git clone https://github.com/Calluking/RTC-Retrieval-Token-Cutter.git
-cd RTC-Retrieval-Token-Cutter
+git clone https://github.com/Calluking/ContextSniper.git
+cd ContextSniper
 ./bootstrap.sh
 ```
 
@@ -72,9 +72,9 @@ cd RTC-Retrieval-Token-Cutter
 export DEEPSEEK_API_KEY="<your-deepseek-key>"
 export DEEPSEEK_BASE_URL="https://api.deepseek.com"
 export OPENCLAW_MODEL="deepseek/deepseek-v4-flash"
-export RTC_EMBEDDING_API_KEY="<your-embedding-key>"
-export RTC_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
-export RTC_EMBEDDING_MODEL="text-embedding-3-small"
+export CONTEXTSNIPER_EMBEDDING_API_KEY="<your-embedding-key>"
+export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
+export CONTEXTSNIPER_EMBEDDING_MODEL="text-embedding-3-small"
 export ANTHROPIC_MODEL="haiku"
 ```
 
@@ -88,7 +88,7 @@ source setup_env.sh
 并构建 `agfs/build/agfs-server`。完整 SWE-bench 验证是可选的；只有需要
 较重的 SWE-bench 依赖时再运行 `./bootstrap.sh --install-swe-deps`。
 
-![全新 clone 快速开始](<docs/assets/readme/RTC/CN_Fresh Clone Start.png>)
+![全新 clone 快速开始](<docs/assets/readme/ContextSniper/CN_Fresh Clone Start.png>)
 
 ## 启动 Claude
 
@@ -96,7 +96,7 @@ source setup_env.sh
 
 ```bash
 cd /path/to/project
-claude --plugin-dir "$RTC_DIR/claude-plugin"
+claude --plugin-dir "$CONTEXTSNIPER_DIR/claude-plugin"
 ```
 
 不要传 `--mcp-config`；Claude 插件自带 `.mcp.json`。
@@ -129,35 +129,35 @@ Claude：
 预期状态：
 
 ```text
-retrieval-token-cutter Plugin · inline · ✔ enabled
-└ retrieval-token-cutter MCP · ✔ connected
+contextsniper Plugin · inline · ✔ enabled
+└ contextsniper MCP · ✔ connected
 ```
 
 OpenClaw：
 
 ```bash
-openclaw plugins inspect retrieval-token-cutter --runtime --json
+openclaw plugins inspect contextsniper --runtime --json
 ```
 
 运行时输出应包含：
 
 ```text
-rtc_health
-rtc_index_codebase
-rtc_search_code
-rtc_edit_file
+contextsniper_health
+contextsniper_index_codebase
+contextsniper_search_code
+contextsniper_edit_file
 ```
 
-如果要确认某次运行确实用了 RTC 搜索/过滤：
+如果要确认某次运行确实用了 ContextSniper 搜索/过滤：
 
 ```bash
 latest=$(ls -t ~/.openclaw/agents/*/sessions/*.jsonl | grep -v trajectory | head -1)
-rg -n "Retrieval Token Cutter|FILTER IS TRIGGERED|rtc_search_code|rtc_edit_file" "$latest"
+rg -n "ContextSniper|FILTER IS TRIGGERED|contextsniper_search_code|contextsniper_edit_file" "$latest"
 ```
 
 对于 Claude，可以查看当前 Claude debug log 或 `/plugin` 面板。健康的代码任务应出现包含 `search_code` 和 `edit_file` 的 MCP 工具名。
 
-![代码任务流程](<docs/assets/readme/RTC/CN_Code Task Flow.png>)
+![代码任务流程](<docs/assets/readme/ContextSniper/CN_Code Task Flow.png>)
 
 ## 配置
 
@@ -167,16 +167,16 @@ rg -n "Retrieval Token Cutter|FILTER IS TRIGGERED|rtc_search_code|rtc_edit_file"
 
 | 变量 | 用途 |
 | --- | --- |
-| `RTC_EMBEDDING_API_KEY` | 真实语义代码搜索所需的 API key |
-| `RTC_EMBEDDING_BASE_URL` | OpenAI 兼容 embedding endpoint |
-| `RTC_EMBEDDING_MODEL` | Embedding 模型名 |
+| `CONTEXTSNIPER_EMBEDDING_API_KEY` | 真实语义代码搜索所需的 API key |
+| `CONTEXTSNIPER_EMBEDDING_BASE_URL` | OpenAI 兼容 embedding endpoint |
+| `CONTEXTSNIPER_EMBEDDING_MODEL` | Embedding 模型名 |
 | `PY_BIN` | 可选的插件/后端 Python 覆盖 |
-| `RTC_FILTER_ENABLED` | read/exec 过滤开关，默认 `1` |
-| `RTC_INJECT_FILTERING_PROMPT` | 是否注入过滤策略说明 |
+| `CONTEXTSNIPER_FILTER_ENABLED` | read/exec 过滤开关，默认 `1` |
+| `CONTEXTSNIPER_INJECT_FILTERING_PROMPT` | 是否注入过滤策略说明 |
 
 `requirements.txt` 已包含 `httpx[socks]`；`setup_env.sh` 也会为
 `127.0.0.1`、`localhost` 和 `::1` 设置 `NO_PROXY`/`no_proxy`，避免本地
-RTC/AGFS 请求走 HTTP(S)/SOCKS 代理。
+ContextSniper/AGFS 请求走 HTTP(S)/SOCKS 代理。
 
 ## 重要文件
 
@@ -200,5 +200,5 @@ runner 模式、运行命令、输出位置和日志检查见
 
 ## 参考
 
-- [AGFS](https://github.com/c4pt0r/agfs)：RTC 在 [agfs/](agfs/) 下内置并构建本地
+- [AGFS](https://github.com/c4pt0r/agfs)：ContextSniper 在 [agfs/](agfs/) 下内置并构建本地
   AGFS server，并使用 `pyagfs` 处理本地 memory/file-service 操作。

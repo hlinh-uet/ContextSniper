@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec "${PY_BIN:-python3}" "$HERE/scripts/rtc_terminal.py" status "$@"

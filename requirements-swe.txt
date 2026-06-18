@@ -1,4 +1,4 @@
 # Optional SWE-bench runner dependency. Full SWE validation/local env setup
-# needs this, but the default RTC Claude/OpenClaw runtime does not.
+# needs this, but the default ContextSniper Claude/OpenClaw runtime does not.
 swebench>=3.0.0
 pyarrow>=15.0.0

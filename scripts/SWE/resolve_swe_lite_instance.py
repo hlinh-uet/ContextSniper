@@ -154,7 +154,7 @@ Important SWE-bench rule:
 
 Generate a patch that resolves the issue.
 """
-    if prompt_kind == "openclaw_rtc":
+    if prompt_kind == "openclaw_contextsniper":
         prompt += """
 Important SWE-bench rule:
 - Do not edit benchmark tests, test files, or test fixtures.
@@ -162,8 +162,8 @@ Important SWE-bench rule:
 - You may run existing tests to reproduce and verify, but the final patch should
   be source-only unless the issue explicitly asks for test changes.
 """
-        return prompt, "PROMPT_OPENCLAW_RTC.txt"
-    return prompt, "PROMPT_RTC.txt"
+        return prompt, "PROMPT_OPENCLAW_CONTEXTSNIPER.txt"
+    return prompt, "PROMPT_CONTEXTSNIPER.txt"
 
 
 def main() -> int:

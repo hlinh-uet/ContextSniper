@@ -1,9 +1,9 @@
 {
-  "name": "retrieval-token-cutter",
+  "name": "contextsniper",
   "version": "0.2.0",
-  "description": "Terminal-first Retrieval Token Cutter plugin for Claude Code: hooks plus usable shell commands",
+  "description": "Terminal-first ContextSniper plugin for Claude Code: hooks plus usable shell commands",
   "author": {
-    "name": "Retrieval Token Cutter contributors"
+    "name": "ContextSniper contributors"
   },
   "keywords": ["memory", "mcp", "code-search"],
   "mcpServers": "./.mcp.json"

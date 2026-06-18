@@ -3,14 +3,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "context-engine"
+name = "contextsniper"
 version = "0.1.0"
 description = "Long-term memory infrastructure for AI Agents"
 readme = "README.md"
 license = { text = "MulanPSL-2.0" }
 requires-python = ">=3.11"
 authors = [
-    { name = "ContextEngine Team" }
+    { name = "ContextSniper Team" }
 ]
 keywords = ["ai", "agents", "memory", "llm", "rag"]
 classifiers = [
@@ -32,8 +32,8 @@ dependencies = [
 ]
 
 [project.scripts]
-rtc = "cli.main:main"
-retrieval-token-cutter-mcp = "retrieval_token_cutter_mcp.server:main"
+contextsniper = "cli.main:main"
+contextsniper-mcp = "contextsniper_mcp.server:main"
 
 [project.optional-dependencies]
 dev = [
@@ -60,14 +60,14 @@ e2e = [
 
 # All extras
 all = [
-    "context-engine[opengauss,chroma,sentence-transformers]",
+    "contextsniper[opengauss,chroma,sentence-transformers]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/retrieval-token-cutter/retrieval-token-cutter"
-Documentation = "https://github.com/retrieval-token-cutter/retrieval-token-cutter#readme"
-Repository = "https://github.com/retrieval-token-cutter/retrieval-token-cutter.git"
-Issues = "https://github.com/retrieval-token-cutter/retrieval-token-cutter/issues"
+Homepage = "https://github.com/Calluking/ContextSniper"
+Documentation = "https://github.com/Calluking/ContextSniper#readme"
+Repository = "https://github.com/Calluking/ContextSniper.git"
+Issues = "https://github.com/Calluking/ContextSniper/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = [
@@ -81,7 +81,7 @@ packages = [
     "providers",
     "service",
     "server",
-    "retrieval_token_cutter_mcp",
+    "contextsniper_mcp",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -97,7 +97,7 @@ include = [
     "/providers",
     "/service",
     "/server",
-    "/retrieval_token_cutter_mcp",
+    "/contextsniper_mcp",
 ]
 
 [tool.pytest.ini_options]
@@ -122,7 +122,7 @@ select = ["E", "F", "I", "N", "W", "UP"]
 ignore = ["E501"]  # line-length handled by formatter
 
 [tool.ruff.lint.isort]
-known-first-party = ["core", "fs", "extraction", "commit", "index", "retrieval", "providers", "service", "retrieval_token_cutter_mcp"]
+known-first-party = ["core", "fs", "extraction", "commit", "index", "retrieval", "providers", "service", "contextsniper_mcp"]
 
 # MyPy configuration
 [tool.mypy]
