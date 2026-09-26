@@ -4,6 +4,18 @@
 # Usage:
 #   source /path/to/source_tree/setup_env.sh
 
+CONTEXTSNIPER_SETUP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load optional repository-local credentials and endpoint overrides. The file
+# is gitignored; .env.example is the shareable template. Keep this before the
+# shell profile so a developer's existing profile can still override it.
+if [ -f "$CONTEXTSNIPER_SETUP_ROOT/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$CONTEXTSNIPER_SETUP_ROOT/.env"
+  set +a
+fi
+
 # Let developer machines provide local secrets/base URLs from their shell setup.
 # This file intentionally does not set API keys.
 if [ -f "$HOME/.bashrc" ]; then
@@ -11,9 +23,11 @@ if [ -f "$HOME/.bashrc" ]; then
   source "$HOME/.bashrc" >/dev/null 2>&1 || true
 fi
 
-# Backward compatibility for machines configured before the ContextSniper
-# rename. Prefer the new names when both are present.
-export CONTEXTSNIPER_EMBEDDING_API_KEY="${CONTEXTSNIPER_EMBEDDING_API_KEY:-${RTC_EMBEDDING_API_KEY:-}}"
+# Accept the standard OpenRouter key without requiring callers to know
+# ContextSniper's internal variable name. Keep backward compatibility for
+# machines configured before the ContextSniper rename. Prefer the internal
+# name when more than one is present.
+export CONTEXTSNIPER_EMBEDDING_API_KEY="${CONTEXTSNIPER_EMBEDDING_API_KEY:-${OPENROUTER_API_KEY:-${RTC_EMBEDDING_API_KEY:-}}}"
 export CONTEXTSNIPER_EMBEDDING_BASE_URL="${CONTEXTSNIPER_EMBEDDING_BASE_URL:-${RTC_EMBEDDING_BASE_URL:-}}"
 export CONTEXTSNIPER_EMBEDDING_MODEL="${CONTEXTSNIPER_EMBEDDING_MODEL:-${RTC_EMBEDDING_MODEL:-}}"
 
@@ -21,8 +35,8 @@ export CONTEXTSNIPER_EMBEDDING_MODEL="${CONTEXTSNIPER_EMBEDDING_MODEL:-${RTC_EMB
 # Keep real API keys in your shell profile when possible; this empty default is
 # here to show the required variable name for semantic code search.
 export CONTEXTSNIPER_EMBEDDING_API_KEY="${CONTEXTSNIPER_EMBEDDING_API_KEY:-}"
-export CONTEXTSNIPER_EMBEDDING_BASE_URL="${CONTEXTSNIPER_EMBEDDING_BASE_URL:-https://api.openai-proxy.org}"
-export CONTEXTSNIPER_EMBEDDING_MODEL="${CONTEXTSNIPER_EMBEDDING_MODEL:-text-embedding-3-small}"
+export CONTEXTSNIPER_EMBEDDING_BASE_URL="${CONTEXTSNIPER_EMBEDDING_BASE_URL:-https://openrouter.ai/api/v1}"
+export CONTEXTSNIPER_EMBEDDING_MODEL="${CONTEXTSNIPER_EMBEDDING_MODEL:-openai/text-embedding-3-small}"
 export EMBEDDING_PROVIDER="${EMBEDDING_PROVIDER:-openai}"
 export CONTEXTSNIPER_RETRIEVAL_SEMANTIC_ENABLED="${CONTEXTSNIPER_RETRIEVAL_SEMANTIC_ENABLED:-1}"
 export CONTEXTSNIPER_RETRIEVAL_GRAPH_ENABLED="${CONTEXTSNIPER_RETRIEVAL_GRAPH_ENABLED:-1}"
@@ -42,7 +56,7 @@ export NPM_CONFIG_REGISTRY="${NPM_CONFIG_REGISTRY:-https://registry.npmmirror.co
 export DEBIAN_FRONTEND="${DEBIAN_FRONTEND:-noninteractive}"
 export PATH="$HOME/.local/bin:$HOME/.openclaw/bin:$PATH"
 
-export CONTEXTSNIPER_SOURCE_TREE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export CONTEXTSNIPER_SOURCE_TREE="$CONTEXTSNIPER_SETUP_ROOT"
 export CONTEXTSNIPER_DIR="$CONTEXTSNIPER_SOURCE_TREE"
 export CONTEXTSNIPER_CLAUDE_PLUGIN_DIR="$CONTEXTSNIPER_SOURCE_TREE/claude-plugin"
 
@@ -95,5 +109,5 @@ fi
 if [ -n "${CONTEXTSNIPER_EMBEDDING_API_KEY:-}" ]; then
   echo "CONTEXTSNIPER_EMBEDDING_API_KEY=set"
 else
-  echo "CONTEXTSNIPER_EMBEDDING_API_KEY=<empty> (set this before real code search)"
+  echo "CONTEXTSNIPER_EMBEDDING_API_KEY=<empty> (export OPENROUTER_API_KEY before real code search)"
 fi

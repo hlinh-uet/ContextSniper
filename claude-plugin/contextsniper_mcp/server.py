@@ -23,6 +23,42 @@ _IDENT = r"[A-Za-z_][A-Za-z0-9_]*"
 _STARTED_BACKEND = False
 
 
+def _workspace_root_guard_enabled() -> bool:
+    """Return whether callers must stay inside CONTEXTSNIPER_WORKSPACE_ROOT."""
+    return (os.environ.get("CONTEXTSNIPER_ENFORCE_WORKSPACE_ROOT") or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def _guarded_active_root() -> Path | None:
+    if not _workspace_root_guard_enabled():
+        return None
+    raw = (os.environ.get("CONTEXTSNIPER_WORKSPACE_ROOT") or "").strip()
+    if not raw:
+        raise ValueError(
+            "CONTEXTSNIPER_ENFORCE_WORKSPACE_ROOT requires "
+            "CONTEXTSNIPER_WORKSPACE_ROOT"
+        )
+    return Path(raw).expanduser().resolve()
+
+
+def _require_guarded_path(path: Path, *, label: str) -> Path:
+    """Reject paths outside the active workspace when the opt-in guard is set."""
+    active_root = _guarded_active_root()
+    resolved = path.expanduser().resolve()
+    if active_root is not None:
+        try:
+            resolved.relative_to(active_root)
+        except ValueError as exc:
+            raise ValueError(
+                f"{label} is outside CONTEXTSNIPER_WORKSPACE_ROOT: {resolved}"
+            ) from exc
+    return resolved
+
+
 def _plugin_root() -> Path:
     return Path(__file__).resolve().parents[1]
 
@@ -159,7 +195,11 @@ def _workspace_root_arg(path: str | None) -> str | None:
         raw = os.environ.get("CONTEXTSNIPER_WORKSPACE_ROOT", "") or os.environ.get("CLAUDE_PROJECT_DIR", "") or os.getcwd()
     if not raw:
         return None
-    return str(Path(os.path.expandvars(raw)).expanduser().resolve())
+    candidate = Path(os.path.expandvars(raw)).expanduser()
+    active_root = _guarded_active_root()
+    if active_root is not None and not candidate.is_absolute():
+        candidate = active_root / candidate
+    return str(_require_guarded_path(candidate, label="Workspace/search path"))
 
 
 def _search_scope_args(path: str | None, glob_patterns: str | None) -> tuple[str | None, str | None]:
@@ -200,16 +240,16 @@ def _search_scope_args(path: str | None, glob_patterns: str | None) -> tuple[str
 
 
 def _resolve_workspace_path(workspace_root: str, file_path: str) -> Path:
-    root = Path(workspace_root).expanduser().resolve()
+    root = _require_guarded_path(Path(workspace_root), label="Workspace root")
     target = Path(file_path).expanduser()
     target = target if target.is_absolute() else (root / target)
-    target = target.resolve()
+    target = _require_guarded_path(target, label="Target path")
     active_raw = os.environ.get("CONTEXTSNIPER_WORKSPACE_ROOT", "") or os.environ.get("CLAUDE_PROJECT_DIR", "")
     if active_raw:
         active_root = Path(active_raw).expanduser().resolve()
         active_target = Path(file_path).expanduser()
         active_target = active_target if active_target.is_absolute() else (active_root / active_target)
-        active_target = active_target.resolve()
+        active_target = _require_guarded_path(active_target, label="Target path")
         if not target.exists() and active_target.exists():
             root = active_root
             target = active_target

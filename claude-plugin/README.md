@@ -28,12 +28,15 @@ From a fresh clone, prepare the repository once:
 git clone https://github.com/Calluking/ContextSniper.git
 cd ContextSniper
 ./bootstrap.sh
-export CONTEXTSNIPER_EMBEDDING_API_KEY="<your-key>"
+export OPENROUTER_API_KEY="<your-openrouter-key>"
 source setup_env.sh
 ```
 
-At minimum, set `CONTEXTSNIPER_EMBEDDING_API_KEY` in your shell or shell profile for real
-code search. If you do not use the repository `.venv`, set `PY_BIN` to a Python
+At minimum, set `OPENROUTER_API_KEY` (or the lower-level
+`CONTEXTSNIPER_EMBEDDING_API_KEY`) in your shell or shell profile for real code
+search. The default endpoint is `https://openrouter.ai/api/v1` and the default
+model is `openai/text-embedding-3-small`. If you do not use the repository
+`.venv`, set `PY_BIN` to a Python
 that can import `flask`, `mcp`, `openai`, and `pyagfs`. The MCP launcher also
 checks common local Conda paths such as `~/miniconda3/bin/python`.
 `./bootstrap.sh` creates `.venv`, installs `requirements.txt`, and builds the

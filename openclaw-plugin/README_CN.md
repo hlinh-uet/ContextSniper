@@ -23,11 +23,12 @@ OpenClaw 加载插件时，插件可以自动启动本地 ContextSniper 和 AGFS
 git clone https://github.com/Calluking/ContextSniper.git
 cd ContextSniper
 ./bootstrap.sh
-$EDITOR setup_env.sh
+export OPENROUTER_API_KEY="<your-openrouter-key>"
 source setup_env.sh
 ```
 
-至少在 `setup_env.sh` 顶部的用户可编辑区设置 `CONTEXTSNIPER_EMBEDDING_API_KEY`，或把它放在 shell profile 中。OpenClaw
+至少在 shell profile 中设置 `OPENROUTER_API_KEY`（或底层变量
+`CONTEXTSNIPER_EMBEDDING_API_KEY`）。OpenClaw
 插件加载时会通过 `setup_env.sh` 导入 shell profile 设置并应用仓库默认值。
 `./bootstrap.sh` 会创建 `.venv`、安装 `requirements.txt`，并把内置 AGFS
 server 构建到 `agfs/build/agfs-server`。
@@ -35,9 +36,9 @@ server 构建到 `agfs/build/agfs-server`。
 你也可以把 embedding 密钥放在本机 shell 环境里，例如 `~/.bashrc`：
 
 ```bash
-export CONTEXTSNIPER_EMBEDDING_API_KEY="<your-key>"
-export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
-export CONTEXTSNIPER_EMBEDDING_MODEL="text-embedding-3-small"
+export OPENROUTER_API_KEY="<your-openrouter-key>"
+export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://openrouter.ai/api/v1"
+export CONTEXTSNIPER_EMBEDDING_MODEL="openai/text-embedding-3-small"
 ```
 
 然后以本地链接方式安装插件：

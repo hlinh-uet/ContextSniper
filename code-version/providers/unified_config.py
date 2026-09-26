@@ -115,9 +115,10 @@ def _infer_embedding_dimension(provider: str | None, model: str | None) -> int:
     provider_l = (provider or "").strip().lower()
     model_l = (model or "").strip().lower()
     if provider_l in ("openai", "openai-cached") or model_l.startswith("text-embedding-"):
-        if model_l == "text-embedding-3-large":
+        model_name = model_l.rsplit("/", 1)[-1]
+        if model_name == "text-embedding-3-large":
             return 3072
-        if model_l in ("text-embedding-3-small", "text-embedding-ada-002"):
+        if model_name in ("text-embedding-3-small", "text-embedding-ada-002"):
             return 1536
     if provider_l == "volcengine":
         return 1024

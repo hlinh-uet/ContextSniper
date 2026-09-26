@@ -396,8 +396,8 @@ def command_start(args: argparse.Namespace) -> int:
     env.setdefault("VECTOR_DB_TYPE", "memory")
     env.setdefault("CONTEXTSNIPER_CODE_TOGGLE", "true")
     env.setdefault("EMBEDDING_PROVIDER", "openai")
-    env.setdefault("CONTEXTSNIPER_EMBEDDING_MODEL", "text-embedding-3-small")
-    env.setdefault("CONTEXTSNIPER_EMBEDDING_BASE_URL", "https://api.openai-proxy.org")
+    env.setdefault("CONTEXTSNIPER_EMBEDDING_MODEL", "openai/text-embedding-3-small")
+    env.setdefault("CONTEXTSNIPER_EMBEDDING_BASE_URL", "https://openrouter.ai/api/v1")
     env.setdefault("CONTEXTSNIPER_START_LOCAL_EMBED_SERVER", "0")
 
     agfs_config = run / "agfs-config.yaml"

@@ -47,12 +47,13 @@ model.
 
 ## Overview
 
-ContextSniper ships two local plugins:
+ContextSniper ships two local plugins and one Codex evaluation adapter:
 
 | Host | Plugin | What it adds |
 | --- | --- | --- |
 | Claude Code | [claude-plugin/](claude-plugin/) | MCP tools for code search/edit plus prompt policy injection |
 | OpenClaw | [openclaw-plugin/](openclaw-plugin/) | Native tools, prompt policy injection, and read/exec filtering |
+| Codex CLI | [ContextSniper-Codex/](ContextSniper-Codex/) | Plain ContextSniper search/edit with Codex `gpt-5.6-sol` low and bundled Defects4C validation |
 
 Both plugins can start the local ContextSniper backend and AGFS service
 for you, then stop the services they started when the host exits.
@@ -74,15 +75,26 @@ cd ContextSniper
 OpenClaw and Claude Code are installed, then asks which integration to set up.
 It does not ask you to type API keys into the installer.
 
-Export your model and embedding settings:
-(Use deepseek and text-embedding-3-small as example)
+For a clone that will be used by a teammate, create the ignored local
+environment file and add that teammate's own credentials:
+
+```bash
+cp .env.example .env
+# Edit .env and set OPENROUTER_API_KEY.
+```
+
+`setup_env.sh` loads the repository-root `.env` automatically. Never commit or
+share a populated `.env`; share `.env.example` instead.
+
+Export your model and embedding settings (DeepSeek for OpenClaw and OpenRouter
+for embeddings in this example):
 ```bash
 export DEEPSEEK_API_KEY="<your-deepseek-key>"
 export DEEPSEEK_BASE_URL="https://api.deepseek.com"
 export OPENCLAW_MODEL="deepseek/deepseek-v4-flash"
-export CONTEXTSNIPER_EMBEDDING_API_KEY="<your-embedding-key>"
-export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
-export CONTEXTSNIPER_EMBEDDING_MODEL="text-embedding-3-small"
+export OPENROUTER_API_KEY="<your-openrouter-key>"
+export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://openrouter.ai/api/v1"
+export CONTEXTSNIPER_EMBEDDING_MODEL="openai/text-embedding-3-small"
 export ANTHROPIC_MODEL="haiku"
 ```
 
@@ -180,6 +192,7 @@ Common settings:
 
 | Variable | Purpose |
 | --- | --- |
+| `OPENROUTER_API_KEY` | OpenRouter key; mapped to ContextSniper's internal embedding key |
 | `CONTEXTSNIPER_EMBEDDING_API_KEY` | API key for real semantic code search |
 | `CONTEXTSNIPER_EMBEDDING_BASE_URL` | OpenAI-compatible embedding endpoint |
 | `CONTEXTSNIPER_EMBEDDING_MODEL` | Embedding model name |
@@ -206,6 +219,13 @@ traffic bypasses HTTP(S)/SOCKS proxies.
 The SWE runners build a task prompt and start Claude or OpenClaw
 non-interactively. See [scripts/SWE/README.md](scripts/SWE/README.md) for the
 six runner modes, run commands, output locations, and log checks.
+
+## Codex Defects4C Runner
+
+The [ContextSniper-Codex adapter](ContextSniper-Codex/) runs one plain
+ContextSniper attempt with `gpt-5.6-sol` at low reasoning, records Codex token
+events, and uses the prepared validation contract to classify the patch as
+`plausible`, `cleanfix`, `noisefix`, `nonefix`, `negfix`, or `invalid`.
 
 ## License
 

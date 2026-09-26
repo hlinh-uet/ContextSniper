@@ -1,5 +1,6 @@
 # Python/runtime caches
 .venv/
+.venv-openhands/
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -23,6 +24,7 @@ env.sh
 
 # SWE runner generated state
 output_logs/
+ContextSniper-Codex/output_logs/
 scripts_code_mcp/
 
 scripts/SWE/claude/ContextSniper/.cache/

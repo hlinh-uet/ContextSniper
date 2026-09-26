@@ -27,12 +27,12 @@ From a fresh clone, prepare the repository once:
 git clone https://github.com/Calluking/ContextSniper.git
 cd ContextSniper
 ./bootstrap.sh
-$EDITOR setup_env.sh
+export OPENROUTER_API_KEY="<your-openrouter-key>"
 source setup_env.sh
 ```
 
-Set at least `CONTEXTSNIPER_EMBEDDING_API_KEY` in the user-editable block at the top of
-`setup_env.sh`, or keep it in your shell profile. The OpenClaw plugin loads
+Set at least `OPENROUTER_API_KEY` (or the lower-level
+`CONTEXTSNIPER_EMBEDDING_API_KEY`) in your shell profile. The OpenClaw plugin loads
 `setup_env.sh`, which imports shell profile settings and applies repo defaults.
 `./bootstrap.sh` creates `.venv`, installs
 `requirements.txt`, and builds the bundled AGFS server at
@@ -51,9 +51,9 @@ You may also keep secret embedding settings in your shell environment, for
 example in `~/.bashrc`:
 
 ```bash
-export CONTEXTSNIPER_EMBEDDING_API_KEY="<your-key>"
-export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
-export CONTEXTSNIPER_EMBEDDING_MODEL="text-embedding-3-small"
+export OPENROUTER_API_KEY="<your-openrouter-key>"
+export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://openrouter.ai/api/v1"
+export CONTEXTSNIPER_EMBEDDING_MODEL="openai/text-embedding-3-small"
 ```
 
 Then install the plugin as a linked local plugin:

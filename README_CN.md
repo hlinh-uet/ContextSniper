@@ -72,9 +72,9 @@ cd ContextSniper
 export DEEPSEEK_API_KEY="<your-deepseek-key>"
 export DEEPSEEK_BASE_URL="https://api.deepseek.com"
 export OPENCLAW_MODEL="deepseek/deepseek-v4-flash"
-export CONTEXTSNIPER_EMBEDDING_API_KEY="<your-embedding-key>"
-export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://api.openai-proxy.org"
-export CONTEXTSNIPER_EMBEDDING_MODEL="text-embedding-3-small"
+export OPENROUTER_API_KEY="<your-openrouter-key>"
+export CONTEXTSNIPER_EMBEDDING_BASE_URL="https://openrouter.ai/api/v1"
+export CONTEXTSNIPER_EMBEDDING_MODEL="openai/text-embedding-3-small"
 export ANTHROPIC_MODEL="haiku"
 ```
 
@@ -167,6 +167,7 @@ rg -n "ContextSniper|FILTER IS TRIGGERED|contextsniper_search_code|contextsniper
 
 | 变量 | 用途 |
 | --- | --- |
+| `OPENROUTER_API_KEY` | OpenRouter key；会映射为 ContextSniper 内部的 embedding key |
 | `CONTEXTSNIPER_EMBEDDING_API_KEY` | 真实语义代码搜索所需的 API key |
 | `CONTEXTSNIPER_EMBEDDING_BASE_URL` | OpenAI 兼容 embedding endpoint |
 | `CONTEXTSNIPER_EMBEDDING_MODEL` | Embedding 模型名 |

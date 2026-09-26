@@ -224,7 +224,8 @@ class OpenAIEmbedder(Embedder):
             "text-embedding-3-small": EMBEDDING_3_SMALL_DIM,
             "text-embedding-3-large": EMBEDDING_3_LARGE_DIM,
         }
-        return dimensions.get(model, ADA_002_DIM)  # Default to ada-002
+        model_name = model.rsplit("/", 1)[-1]
+        return dimensions.get(model_name, ADA_002_DIM)  # Default to ada-002
 
     @property
     def dimension(self) -> int:
